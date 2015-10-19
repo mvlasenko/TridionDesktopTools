@@ -1,0 +1,30 @@
+﻿<Window x:Class="TridionDesktopTools.Core.ResultsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Results Window" Height="500" Width="600" ResizeMode="NoResize">
+    <Grid>
+
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+
+        <ListBox Name="lbReport">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="{Binding StatusIcon}" Margin="3,2,2,2" ToolTip="{Binding StackTrace}" />
+                        <Image Source="{Binding Icon}" Margin="3,2,2,2" />
+                        <TextBlock Text="{Binding Message}" Margin="3,2,2,2" ToolTip="{Binding StackTrace}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <StackPanel Orientation="Horizontal" Grid.Row="1">
+            <Button Content="Close" Name="btnClose" Width="100" Height="23" HorizontalAlignment="Left"  Margin="6" Click="btnClose_Click" />
+            <Button Content="Export" Name="btnExport" Width="100" Height="23" HorizontalAlignment="Left"  Margin="6" Click="btnExport_Click" />
+        </StackPanel>
+
+    </Grid>
+</Window>

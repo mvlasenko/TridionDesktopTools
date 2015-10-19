@@ -1,0 +1,56 @@
+﻿<Window x:Class="TridionDesktopTools.Core.FieldMappingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Field Mapping" Height="500" Width="600" Loaded="Window_Loaded" ResizeMode="NoResize">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="32" />
+            <RowDefinition />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal" Name="pnlSourceSchemaVersion" Grid.Row="0" Margin="6,0,6,0">
+            <TextBlock Name="txtSourceSchema" Width="396" VerticalAlignment="Center" />
+            <CheckBox Name="chkDetect" Content="Detect Version" VerticalAlignment="Center" Checked="chkDetect_OnCheckedChanged" Unchecked="chkDetect_OnCheckedChanged" />
+            <ComboBox Name="cbSourceSchemaVersion" Width="80" Height="23" Margin="6,0,0,0" SelectionChanged="cbSourceSchemaVersion_SelectionChanged" />
+        </StackPanel>
+
+        <TextBlock Name="txtTargetSchema" Grid.Row="1" Margin="6" VerticalAlignment="Center" />
+
+        <DataGrid Name="dataGridFieldMapping" VerticalAlignment="Top" AutoGenerateColumns="False" Grid.Row="2" Height="360" CanUserAddRows="False">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Target Field" IsReadOnly="True" Width="240" Binding="{Binding Path=TargetFieldFullName, Mode=OneWay}" />
+                <DataGridComboBoxColumn Header="Source Field" Width="240" SelectedValueBinding="{Binding Path=SourceFieldFullName, Mode=TwoWay}">
+                    <DataGridComboBoxColumn.EditingElementStyle>
+                        <Style TargetType="{x:Type ComboBox}">
+                            <EventSetter Event="SelectionChanged" Handler="SourceFieldChanged" />
+                        </Style>
+                    </DataGridComboBoxColumn.EditingElementStyle>
+                </DataGridComboBoxColumn>
+                <DataGridTextColumn Header="Default Value" MinWidth="50" Binding="{Binding Path=DefaultValue, Mode=TwoWay}">
+                    <DataGridTextColumn.EditingElementStyle>
+                        <Style TargetType="{x:Type TextBox}">
+                            <EventSetter Event="LostFocus" Handler="DefaultValueChanged" />
+                        </Style>
+                    </DataGridTextColumn.EditingElementStyle>
+                </DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="112" />
+                <ColumnDefinition Width="112" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Button Content="Ok" Name="btnOk" Width="100" Height="23" HorizontalAlignment="Left" Margin="6" Click="btnOk_Click" IsDefault="True" Grid.Column="0" />
+            <Button Content="Cancel" Name="btnCancel" Width="100" Height="23" HorizontalAlignment="Left" Click="btnCancel_Click" IsCancel="True" Grid.Column="1" />
+
+            <Button Content="Refresh" Name="btnRefresh" Width="100" Height="23" HorizontalAlignment="Right" Margin="6" Click="btnRefresh_Click" Grid.Column="2" />
+        </Grid>
+
+    </Grid>
+</Window>

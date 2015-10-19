@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{930535CB-D239-4E2F-8040-85D63CEE54FA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TridionDesktopTools.Core</RootNamespace>
+    <AssemblyName>TridionDesktopTools.Core</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Tridion.ContentManager.CoreService.Client, Version=7.1.0.1290, Culture=neutral, PublicKeyToken=ddfc895746e5ee6b, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Tridion.ContentManager.CoreService.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ComponentFieldData.cs" />
+    <Compile Include="FilterWithSchemaWindow.xaml.cs">
+      <DependentUpon>FilterWithSchemaWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ICustomImporter.cs" />
+    <Compile Include="CustomTransformerAttributes.cs" />
+    <Compile Include="CustomTransformerInfo.cs" />
+    <Compile Include="FieldInfo.cs" />
+    <Compile Include="HistoryItemMappingInfo.cs" />
+    <Compile Include="HistoryMappingInfo.cs" />
+    <Compile Include="ICustomTransformer.cs" />
+    <Compile Include="NameTransformOptionsWindow.xaml.cs">
+      <DependentUpon>NameTransformOptionsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="CreteriaRow.cs" />
+    <Compile Include="FilterWindow.xaml.cs">
+      <DependentUpon>FilterWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="HistoryItemInfo.cs" />
+    <Compile Include="LocalSessionAwareCoreServiceClient.cs" />
+    <Compile Include="FieldMappingWindow.xaml.cs">
+      <DependentUpon>FieldMappingWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ILocalClient.cs" />
+    <Compile Include="LocalCoreServiceClient.cs" />
+    <Compile Include="ReplacementInfo.cs" />
+    <Compile Include="ResultInfo.cs" />
+    <Compile Include="ResultsWindow.xaml.cs">
+      <DependentUpon>ResultsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Criteria.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="FieldMappingInfo.cs" />
+    <Compile Include="Functions.cs" />
+    <Compile Include="ItemInfo.cs" />
+    <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchCriteriasControl.xaml.cs">
+      <DependentUpon>SearchCriteriasControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="TbbInfo.cs" />
+    <Compile Include="TridionObjectInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\fld.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\pub.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\sg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\tbb.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="FilterWithSchemaWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="NameTransformOptionsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="FieldMappingWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="FilterWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ResultsWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="SearchCriteriasControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\am.png" />
+    <Resource Include="Resources\cat.png" />
+    <Resource Include="Resources\cmp.png" />
+    <Resource Include="Resources\ct.png" />
+    <Resource Include="Resources\doc.png" />
+    <Resource Include="Resources\fld_cat.png" />
+    <Resource Include="Resources\gif.png" />
+    <Resource Include="Resources\jpg.png" />
+    <Resource Include="Resources\kw.png" />
+    <Resource Include="Resources\mm.png" />
+    <Resource Include="Resources\mov.png" />
+    <Resource Include="Resources\mp3.png" />
+    <Resource Include="Resources\mschema.png" />
+    <Resource Include="Resources\page.png" />
+    <Resource Include="Resources\pdf.png" />
+    <Resource Include="Resources\png.png" />
+    <Resource Include="Resources\ppt.png" />
+    <Resource Include="Resources\pt.png" />
+    <Resource Include="Resources\schema.png" />
+    <Resource Include="Resources\ugc.png" />
+    <Resource Include="Resources\wav.png" />
+    <Resource Include="Resources\xls.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\error.png" />
+    <Resource Include="Resources\info.png" />
+    <Resource Include="Resources\success.png" />
+    <Resource Include="Resources\warning.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\cat_kw.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\proc.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\bundle.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
