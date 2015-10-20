@@ -13,7 +13,7 @@
 
         <StackPanel Orientation="Horizontal" Name="pnlSourceSchemaVersion" Grid.Row="0" Margin="6,0,6,0">
             <TextBlock Name="txtSourceSchema" Width="396" VerticalAlignment="Center" />
-            <CheckBox Name="chkDetect" Content="Detect Version" VerticalAlignment="Center" Checked="chkDetect_OnCheckedChanged" Unchecked="chkDetect_OnCheckedChanged" />
+            <CheckBox Name="chkDetect" Content="Detect Version" VerticalAlignment="Center" />
             <ComboBox Name="cbSourceSchemaVersion" Width="80" Height="23" Margin="6,0,0,0" SelectionChanged="cbSourceSchemaVersion_SelectionChanged" />
         </StackPanel>
 

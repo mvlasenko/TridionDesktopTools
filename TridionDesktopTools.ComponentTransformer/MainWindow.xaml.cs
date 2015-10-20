@@ -37,7 +37,6 @@ namespace TridionDesktopTools.ComponentTransformer
         private List<ItemInfo> _SourceSchemas;
         private List<ItemInfo> _TargetSchemas;
 
-        private List<FieldInfo> _SourceSchemaFields;
         private List<FieldInfo> _TargetSchemaFields;
 
         public CustomTransformerInfo CustomComponentTransformer { get; set; }
@@ -330,10 +329,6 @@ namespace TridionDesktopTools.ComponentTransformer
 
             this._Criterias = null;
 
-            List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchema.TcmId);
-            List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchema.TcmId);
-            this._SourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
-
             if (this.cbSourceSchema.SelectedIndex > -1 && this.cbTargetSchema.SelectedIndex > -1)
             {
                 this.spSettingButtons.Visibility = Visibility.Visible;
@@ -587,9 +582,9 @@ namespace TridionDesktopTools.ComponentTransformer
                 this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceSchema.TcmId, targetSchema.TcmId));
             }
 
-            if (this.HistoryMapping == null)
+            if (this.HistoryMapping == null && this.CustomComponentTransformer == null && this.CustomMetadataTransformer == null)
             {
-                MessageBox.Show("Field mapping is not set. Please set mapping and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Neither field mapping nor custom transformers is set. Please set mapping or select custom transformer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
@@ -597,9 +592,19 @@ namespace TridionDesktopTools.ComponentTransformer
             {
                 foreach (HistoryItemMappingInfo historyMapping in this.HistoryMapping)
                 {
+                    string sourceSchemaVersionTcmId = historyMapping.TcmId;
+                    if (historyMapping.Current && sourceSchemaVersionTcmId.Contains("-v"))
+                    {
+                        sourceSchemaVersionTcmId = sourceSchemaVersionTcmId.Replace("-" + sourceSchemaVersionTcmId.Split('-')[3], "");
+                    }
+
+                    List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchemaVersionTcmId);
+                    List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchemaVersionTcmId);
+                    List<FieldInfo> sourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
+
                     foreach (FieldMappingInfo mapping in historyMapping.Mapping)
                     {
-                        mapping.SourceFields = this._SourceSchemaFields;
+                        mapping.SourceFields = sourceSchemaFields;
                         mapping.TargetFields = this._TargetSchemaFields;
                     }
                 }
@@ -614,12 +619,13 @@ namespace TridionDesktopTools.ComponentTransformer
             string sourceSchemaTcmId = sourceSchema.TcmId;
 
             string targetFolderUri = this.chkSameFolder.IsChecked == true ? this.SourceTridionObject.TcmId : this.TargetTridionFolder.TcmId;
+            bool sameFolder = this.chkSameFolder.IsChecked == true || this.SourceTridionObject.TcmId == this.TargetTridionFolder.TcmId;
 
             bool localize = this.chkLocalize.IsChecked == true;
             Functions.SaveToIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Localize"), localize.ToString());
 
-            // same folder selected and no name transformations: schema change and component fix functionality
-            if (this.chkSameFolder.IsChecked == true && (this._Replacements == null || this._Replacements.Count == 0))
+            // same folder selected: schema change and component fix functionality
+            if (sameFolder)
             {
                 // single component
                 if (sourceItemType == ItemType.Component)
@@ -774,7 +780,19 @@ namespace TridionDesktopTools.ComponentTransformer
 
             bool sameFolder = this.chkSameFolder.IsChecked == true || this.SourceTridionObject.TcmId == this.TargetTridionFolder.TcmId;
 
-            this.btnNameTransform.IsEnabled = !sameFolder;
+            if (sameFolder)
+            {
+                this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Black);
+                this.btnNameTransform.IsEnabled = false;
+            }
+            else
+            {
+                this.btnNameTransform.IsEnabled = true;
+                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
+                {
+                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
+                }
+            }
 
             this.btnCustomTransform.IsEnabled = this.SourceTridionObject != null && sourceSchema != null && targetSchema != null;
             
@@ -809,6 +827,10 @@ namespace TridionDesktopTools.ComponentTransformer
             if (sourceSchema == null)
                 return;
 
+            List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchema.TcmId);
+            List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchema.TcmId);
+            List<FieldInfo> sourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
+
             if (string.IsNullOrEmpty(this._FormatString))
             {
                 this._FormatString = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "FormatString"));
@@ -821,7 +843,7 @@ namespace TridionDesktopTools.ComponentTransformer
                 if (!string.IsNullOrEmpty(replacement1) && !string.IsNullOrEmpty(regex1))
                 {
                     this._Replacements = new List<ReplacementInfo>();
-                    this._Replacements.Add(this.GetReplacement(replacement1, regex1));
+                    this._Replacements.Add(this.GetReplacement(replacement1, regex1, sourceSchemaFields));
                 }
 
                 string replacement2 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Replacement2"));
@@ -830,7 +852,7 @@ namespace TridionDesktopTools.ComponentTransformer
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();
-                    this._Replacements.Add(this.GetReplacement(replacement2, regex2));
+                    this._Replacements.Add(this.GetReplacement(replacement2, regex2, sourceSchemaFields));
                 }
 
                 string replacement3 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Replacement3"));
@@ -839,12 +861,12 @@ namespace TridionDesktopTools.ComponentTransformer
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();
-                    this._Replacements.Add(this.GetReplacement(replacement3, regex3));
+                    this._Replacements.Add(this.GetReplacement(replacement3, regex3, sourceSchemaFields));
                 }
             }
         }
 
-        private ReplacementInfo GetReplacement(string fragment, string regex)
+        private ReplacementInfo GetReplacement(string fragment, string regex, List<FieldInfo> sourceSchemaFields)
         {
             ReplacementInfo replacement = new ReplacementInfo();
             replacement.Regex = regex;
@@ -853,9 +875,9 @@ namespace TridionDesktopTools.ComponentTransformer
             {
                 replacement.Fragment = fragment;
             }
-            else
+            else if (sourceSchemaFields != null)
             {
-                replacement.Field = this._SourceSchemaFields.FirstOrDefault(x => x.GetFieldFullName(false) == fragment);
+                replacement.Field = sourceSchemaFields.FirstOrDefault(x => x.GetFieldFullName(false) == fragment);
             }
 
             return replacement;

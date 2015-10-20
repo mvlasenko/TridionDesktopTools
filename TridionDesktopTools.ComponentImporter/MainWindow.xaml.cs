@@ -569,9 +569,9 @@ namespace TridionDesktopTools.ComponentImporter
                 this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceDatabase, sourceTable, targetSchema.TcmId));
             }
 
-            if (this.HistoryMapping == null)
+            if (this.HistoryMapping == null && this.CustomComponentImporter == null && this.CustomMetadataImporter == null)
             {
-                MessageBox.Show("Field mapping is not set. Please set mapping and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
+                MessageBox.Show("Neither field mapping nor custom importers is set. Please set mapping or select custom importer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 

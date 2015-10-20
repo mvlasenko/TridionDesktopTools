@@ -23,7 +23,6 @@ namespace TridionDesktopTools.Core
 
         public HistoryMappingInfo HistoryMapping { get; private set; }
 
-        private List<FieldInfo> _SourceSchemaFields;
         private List<FieldInfo> _TargetSchemaFields;
 
         private List<HistoryItemInfo> _History;
@@ -36,51 +35,39 @@ namespace TridionDesktopTools.Core
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (!String.IsNullOrEmpty(this.SourceSchemaUri))
-            {
-                //schema 2 schema
-                List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(this.SourceSchemaUri);
-                List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(this.SourceSchemaUri);
-                this._SourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
-            }
-            else if (!String.IsNullOrEmpty(this.SourceDatabase) && !String.IsNullOrEmpty(this.SourceTable))
-            {
-                //table 2 schema
-                this._SourceSchemaFields = Functions.GetDatabaseTableFields(this.DbHost, this.DbUsername, this.DbPassword, this.SourceDatabase, this.SourceTable);
-            }
-
+            SchemaData targetSchema = (SchemaData)Functions.ReadItem(this.TargetSchemaUri);
             List <ItemFieldDefinitionData> targetComponentFields = Functions.GetSchemaFields(this.TargetSchemaUri) ?? new List<ItemFieldDefinitionData>();
             List<ItemFieldDefinitionData> targetMetadataFields = Functions.GetSchemaMetadataFields(this.TargetSchemaUri);
+            this.txtTargetSchema.Text = String.Format("Target Schema: {0} ({1})", targetSchema.Title, targetSchema.Purpose);
 
             if (!String.IsNullOrEmpty(this.SourceSchemaUri))
             {
                 //schema 2 schema
                 this._TargetSchemaFields = Functions.GetAllFields(targetComponentFields, targetMetadataFields, false, true);
-            }
-            else
-            {
-                //table 2 schema
-                this._TargetSchemaFields = Functions.GetAllFields(targetComponentFields, targetMetadataFields, false, false);
-            }
 
-            if (this.HistoryMapping == null)
-            {
                 this.HistoryMapping = Functions.GetHistoryMapping(!String.IsNullOrEmpty(this.SourceSchemaUri) ? Functions.GetId(this.Host, this.SourceSchemaUri, this.TargetSchemaUri) : Functions.GetId(this.Host, this.SourceDatabase, this.SourceTable, this.TargetSchemaUri));
                 if (this.HistoryMapping != null)
                 {
                     foreach (HistoryItemMappingInfo historyMapping in this.HistoryMapping)
                     {
+                        string sourceSchemaVersionTcmId = historyMapping.TcmId;
+                        if (historyMapping.Current && sourceSchemaVersionTcmId.Contains("-v"))
+                        {
+                            sourceSchemaVersionTcmId = sourceSchemaVersionTcmId.Replace("-" + sourceSchemaVersionTcmId.Split('-')[3], "");
+                        }
+
+                        List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchemaVersionTcmId);
+                        List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchemaVersionTcmId);
+                        List<FieldInfo> sourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
+
                         foreach (FieldMappingInfo mapping in historyMapping.Mapping)
                         {
-                            mapping.SourceFields = this._SourceSchemaFields;
+                            mapping.SourceFields = sourceSchemaFields;
                             mapping.TargetFields = this._TargetSchemaFields;
                         }
                     }
                 }
-            }
 
-            if (!String.IsNullOrEmpty(this.SourceSchemaUri))
-            {
                 //schema 2 schema - init versions combo - grid binding is performs in combo selected_changed
                 this._History = Functions.GetItemHistory(this.SourceSchemaUri);
                 this.cbSourceSchemaVersion.ItemsSource = this._History;
@@ -90,53 +77,50 @@ namespace TridionDesktopTools.Core
 
                 string detect = Functions.GetFromIsolatedStorage(Functions.GetId(this.Host, this.SourceSchemaUri, this.TargetSchemaUri, "Detect"));
                 this.chkDetect.IsChecked = !String.IsNullOrEmpty(detect) && detect.ToLower() == "true";
-                this.chkDetect_OnCheckedChanged(null, null);
+
             }
             else
             {
                 //table 2 schema
-                
-                //disable versions combo
-                this.chkDetect.Visibility = Visibility.Hidden;
-                this.cbSourceSchemaVersion.Visibility = Visibility.Hidden;
+                this._TargetSchemaFields = Functions.GetAllFields(targetComponentFields, targetMetadataFields, false, false);
 
-                //grid binding below
-                SchemaData targetSchema = (SchemaData)Functions.ReadItem(this.TargetSchemaUri);
+                List<FieldInfo> sourceSchemaFields = Functions.GetDatabaseTableFields(this.DbHost, this.DbUsername, this.DbPassword, this.SourceDatabase, this.SourceTable);
 
-                List<FieldMappingInfo> fieldMapping = Functions.GetDefaultFieldMapping(this.Host, this._SourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
-                if (this.HistoryMapping != null)
+                this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.Host, this.SourceDatabase, this.SourceTable, this.TargetSchemaUri));
+                foreach (HistoryItemMappingInfo historyMapping in this.HistoryMapping)
                 {
-                    fieldMapping = this.HistoryMapping.Last().Mapping;
+                    foreach (FieldMappingInfo mapping in historyMapping.Mapping)
+                    {
+                        mapping.SourceFields = sourceSchemaFields;
+                        mapping.TargetFields = this._TargetSchemaFields;
+                    }
                 }
 
+                List<FieldMappingInfo> fieldMapping = Functions.GetDefaultFieldMapping(this.Host, sourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
+                
                 if (this.HistoryMapping == null)
                 {
                     this.HistoryMapping = new HistoryMappingInfo();
                     this.HistoryMapping.Add(new HistoryItemMappingInfo { Mapping = fieldMapping, Current = true });
                 }
 
+                if (this.HistoryMapping != null)
+                {
+                    fieldMapping = this.HistoryMapping.Last().Mapping;
+                }
+
+                //disable versions combo
+                this.chkDetect.Visibility = Visibility.Hidden;
+                this.cbSourceSchemaVersion.Visibility = Visibility.Hidden;
+
+                //grid binding
+
                 this.dataGridFieldMapping.ItemsSource = fieldMapping;
-                ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = this._SourceSchemaFields.Select(x => x.GetFieldFullName());
+                ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = sourceSchemaFields.Select(x => x.GetFieldFullName());
 
                 this.txtSourceSchema.Text = String.Format("Source Table: {1} (Source Database: {0})", this.SourceDatabase, this.SourceTable);
-                this.txtTargetSchema.Text = String.Format("Target Schema: {0} ({1})", targetSchema.Title, targetSchema.Purpose);
-            }
-        }
 
-        private void chkDetect_OnCheckedChanged(object sender, RoutedEventArgs e)
-        {
-            if (this.chkDetect.IsChecked == true)
-            {
-                this.cbSourceSchemaVersion.IsEnabled = false;
-                this.cbSourceSchemaVersion.SelectedIndex = this._History.Count - 1;
-                this.HistoryMapping = new HistoryMappingInfo { this.HistoryMapping.Last() };
             }
-            else
-            {
-                this.cbSourceSchemaVersion.IsEnabled = true;
-            }
-
-            Functions.SaveToIsolatedStorage(Functions.GetId(this.Host, this.SourceSchemaUri, this.TargetSchemaUri, "Detect"), this.chkDetect.IsChecked.ToString());
         }
 
         private void cbSourceSchemaVersion_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -146,38 +130,39 @@ namespace TridionDesktopTools.Core
                 return;
 
             string sourceSchemaVersionTcmId = sourceSchemaVersion.TcmId;
-
             if (sourceSchemaVersion.Current && sourceSchemaVersionTcmId.Contains("-v"))
             {
                 sourceSchemaVersionTcmId = sourceSchemaVersionTcmId.Replace("-" + sourceSchemaVersionTcmId.Split('-')[3], "");
             }
-            
+
             SchemaData sourceSchema = (SchemaData)Functions.ReadItem(sourceSchemaVersionTcmId);
-            SchemaData targetSchema = (SchemaData)Functions.ReadItem(this.TargetSchemaUri);
 
             List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchemaVersionTcmId);
             List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchemaVersionTcmId);
-            this._SourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
+            List<FieldInfo> sourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
 
             if(this.HistoryMapping == null)
                 this.HistoryMapping = new HistoryMappingInfo();
-            
+
             List<FieldMappingInfo> fieldMapping;
             if (this.HistoryMapping.Any(x => x.TcmId == sourceSchemaVersion.TcmId))
             {
                 fieldMapping = this.HistoryMapping.First(x => x.TcmId == sourceSchemaVersion.TcmId).Mapping;
+                foreach (FieldMappingInfo mapping in fieldMapping)
+                {
+                    mapping.SourceFields = sourceSchemaFields;
+                }
             }
             else
             {
-                fieldMapping = Functions.GetDefaultFieldMapping(this.Host, this._SourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
+                fieldMapping = Functions.GetDefaultFieldMapping(this.Host, sourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
                 this.HistoryMapping.Add(new HistoryItemMappingInfo { TcmId = sourceSchemaVersion.TcmId, Version = sourceSchemaVersion.Version, Modified = sourceSchemaVersion.Modified, Mapping = fieldMapping });
             }
 
             this.dataGridFieldMapping.ItemsSource = fieldMapping;
-            ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = this._SourceSchemaFields.Select(x => x.GetFieldFullName());
+            ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = sourceSchemaFields.Select(x => x.GetFieldFullName());
 
             this.txtSourceSchema.Text = String.Format("Source Schema: {0} ({1})", sourceSchema.Title + (sourceSchemaVersion.Current ? "" : ", version " + sourceSchemaVersion.Version), sourceSchema.Purpose);
-            this.txtTargetSchema.Text = String.Format("Target Schema: {0} ({1})", targetSchema.Title, targetSchema.Purpose);
         }
 
         private void SourceFieldChanged(object sender, SelectionChangedEventArgs e)
@@ -185,7 +170,7 @@ namespace TridionDesktopTools.Core
             List<FieldMappingInfo> fieldMappingList = (List<FieldMappingInfo>) this.dataGridFieldMapping.ItemsSource;
             if (fieldMappingList == null)
                 return;
-            
+
             FieldMappingInfo selectedFieldMappingItem = this.dataGridFieldMapping.CurrentItem as FieldMappingInfo;
             if (selectedFieldMappingItem == null)
                 return;
@@ -197,7 +182,21 @@ namespace TridionDesktopTools.Core
             if (selectedParentText == "< ignore >")
                 return;
 
-            this.SetAutoChildrenMapping(fieldMappingList, selectedFieldMappingItem, selectedParentText);
+            HistoryItemInfo sourceSchemaVersion = this.cbSourceSchemaVersion.SelectedValue as HistoryItemInfo;
+            if (sourceSchemaVersion == null)
+                return;
+
+            string sourceSchemaVersionTcmId = sourceSchemaVersion.TcmId;
+            if (sourceSchemaVersion.Current && sourceSchemaVersionTcmId.Contains("-v"))
+            {
+                sourceSchemaVersionTcmId = sourceSchemaVersionTcmId.Replace("-" + sourceSchemaVersionTcmId.Split('-')[3], "");
+            }
+
+            List<ItemFieldDefinitionData> sourceComponentFields = Functions.GetSchemaFields(sourceSchemaVersionTcmId);
+            List<ItemFieldDefinitionData> sourceMetadataFields = Functions.GetSchemaMetadataFields(sourceSchemaVersionTcmId);
+            List<FieldInfo> sourceSchemaFields = Functions.GetAllFields(sourceComponentFields, sourceMetadataFields, true, false);
+
+            this.SetAutoChildrenMapping(fieldMappingList, selectedFieldMappingItem, sourceSchemaFields, selectedParentText);
             this.SetAutoParentMapping(fieldMappingList, selectedFieldMappingItem);
         }
 
@@ -279,16 +278,18 @@ namespace TridionDesktopTools.Core
             }
             else
             {
+                List<FieldInfo> sourceSchemaFields = Functions.GetDatabaseTableFields(this.DbHost, this.DbUsername, this.DbPassword, this.SourceDatabase, this.SourceTable);
+
                 this.HistoryMapping = new HistoryMappingInfo();
-                List<FieldMappingInfo> fieldMapping = Functions.GetDefaultFieldMapping(this.Host, this._SourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
+                List<FieldMappingInfo> fieldMapping = Functions.GetDefaultFieldMapping(this.Host, sourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
                 this.HistoryMapping.Add(new HistoryItemMappingInfo { Mapping = fieldMapping, Current = true });
 
                 this.dataGridFieldMapping.ItemsSource = fieldMapping;
-                ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = this._SourceSchemaFields.Select(x => x.GetFieldFullName());
+                ((DataGridComboBoxColumn)this.dataGridFieldMapping.Columns[1]).ItemsSource = sourceSchemaFields.Select(x => x.GetFieldFullName());
             }
         }
 
-        private void SetAutoChildrenMapping(List<FieldMappingInfo> fieldMappingList, FieldMappingInfo selectedParentFieldMappingItem, string selectedParentText)
+        private void SetAutoChildrenMapping(List<FieldMappingInfo> fieldMappingList, FieldMappingInfo selectedParentFieldMappingItem, List<FieldInfo> sourceSchemaFields, string selectedParentText)
         {
             selectedParentFieldMappingItem.SourceFieldFullName = selectedParentText;
             FieldInfo selectedParentSourceField = selectedParentFieldMappingItem.SourceField;
@@ -299,13 +300,13 @@ namespace TridionDesktopTools.Core
                 if (fieldMappingItem.TargetField != null && fieldMappingItem.TargetField.Parent == selectedParentFieldMappingItem.TargetField)
                 {
                     string sourceFieldFullName = fieldMappingItem.TargetField.GetFieldFullName(false) + string.Format(" | ({0})", (parentPath + "/" + fieldMappingItem.TargetField.Field.Name).Trim('/'));
-                    if (this._SourceSchemaFields.All(x => x.GetFieldFullName().Trim() != sourceFieldFullName.Trim()))
+                    if (sourceSchemaFields.All(x => x.GetFieldFullName().Trim() != sourceFieldFullName.Trim()))
                     {
                         sourceFieldFullName = "< ignore >";
                     }
                     fieldMappingItem.SourceFieldFullName = sourceFieldFullName;
 
-                    this.SetAutoChildrenMapping(fieldMappingList, fieldMappingItem, fieldMappingItem.SourceFieldFullName);
+                    this.SetAutoChildrenMapping(fieldMappingList, fieldMappingItem, sourceSchemaFields, fieldMappingItem.SourceFieldFullName);
                 }
             }
         }

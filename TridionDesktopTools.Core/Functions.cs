@@ -2170,6 +2170,19 @@ namespace TridionDesktopTools.Core
                     }
                 }
 
+                //construct primitive or emebedded from default values
+                else
+                {
+                    if (!targetField.IsMultiValue())
+                    {
+                        item.Value = GetSourceMappedValue(mapping, doc.Root, sourceNs);
+                    }
+                    else
+                    {
+                        item.Value = GetSourceMappedValues(mapping, doc.Root, sourceNs);
+                    }
+                }
+
                 if (item.Value == null && !string.IsNullOrEmpty(mapping.DefaultValue))
                 {
                     item.Value = GetDefaultValue(mapping);
@@ -2400,6 +2413,11 @@ namespace TridionDesktopTools.Core
                 result.TcmId = folderUri;
                 result.Status = Status.Error;
                 result.Message = "Component title is not defined";
+            }
+
+            if (string.IsNullOrEmpty(metadataXml))
+            {
+                metadataXml = string.Format("<Metadata xmlns=\"{0}\" />", schema.NamespaceUri);
             }
 
             //check existing item
@@ -2894,7 +2912,6 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(newContent))
                 return;
 
-            //todo: this called twice
             List<ComponentFieldData> sourceValues = GetValues(sourceSchema.NamespaceUri, sourceComponentFields, component.Content);
             List<ComponentFieldData> metadataValues = GetValues(sourceSchema.NamespaceUri, sourceMetadataFields, component.Metadata);
             
@@ -2912,8 +2929,6 @@ namespace TridionDesktopTools.Core
                 string newSourceContent = String.Empty;
                 if (sourceComponentFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
                 {
-                    //todo: defined above
-                    //List<ComponentFieldData> sourceValues = GetValues(sourceSchema.NamespaceUri, sourceComponentFields, component.Content);
                     ComponentFieldData sourceValue = sourceValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
                     if (sourceValue == null)
                     {
@@ -2929,8 +2944,6 @@ namespace TridionDesktopTools.Core
                 string newSourceMetadata = String.Empty;
                 if (sourceMetadataFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
                 {
-                    //todo: defined above
-                    //List<ComponentFieldData> metadataValues = GetValues(sourceSchema.NamespaceUri, sourceMetadataFields, component.Metadata);
                     ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
                     if (metadataValue == null)
                     {
@@ -3266,7 +3279,6 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(newContent))
                 return;
 
-            //todo: this called twice
             List<ComponentFieldData> metadataValues = GetValues(sourceMetadataSchema.NamespaceUri, sourceMetadataFields, tridionObject.Metadata);
 
             string newTitle = GetTransformedName(tridionObject.Title, sourceTridionObjectUri, null, metadataValues, formatString, replacements);
@@ -3283,8 +3295,6 @@ namespace TridionDesktopTools.Core
                 string newSourceMetadata = String.Empty;
                 if (sourceMetadataFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
                 {
-                    //todo: defined above
-                    //List<ComponentFieldData> metadataValues = GetValues(sourceMetadataSchema.NamespaceUri, sourceMetadataFields, tridionObject.Metadata);
                     ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
                     if (metadataValue == null)
                     {
