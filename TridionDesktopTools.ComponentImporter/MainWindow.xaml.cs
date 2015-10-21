@@ -543,6 +543,17 @@ namespace TridionDesktopTools.ComponentImporter
             this.SetCustomImporters();
             this.SetCustomNameTransformers();
 
+            if (this.HistoryMapping == null)
+            {
+                this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceDatabase, sourceTable, targetSchema.TcmId));
+            }
+
+            if (this.HistoryMapping == null && (this.CustomComponentImporter == null || this.CustomMetadataImporter == null))
+            {
+                MessageBox.Show("Neither field mapping nor custom importers is set. Please set mapping or select custom importer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             //inform that custom transfromation is selected
             if (this.CustomComponentImporter != null || this.CustomMetadataImporter != null)
             {
@@ -560,19 +571,8 @@ namespace TridionDesktopTools.ComponentImporter
                     messsage = String.Format("Custom metadata import {0} is used.\n\nContinue?", this.CustomMetadataImporter.TypeName);
                 }
 
-                if(MessageBox.Show(messsage, "Custom import", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+                if (MessageBox.Show(messsage, "Custom import", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
                     return;
-            }
-
-            if (this.HistoryMapping == null)
-            {
-                this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceDatabase, sourceTable, targetSchema.TcmId));
-            }
-
-            if (this.HistoryMapping == null && this.CustomComponentImporter == null && this.CustomMetadataImporter == null)
-            {
-                MessageBox.Show("Neither field mapping nor custom importers is set. Please set mapping or select custom importer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
             }
 
             if (this.HistoryMapping != null)
@@ -692,7 +692,7 @@ namespace TridionDesktopTools.ComponentImporter
             {
                 string replacement1 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Replacement1"));
                 string regex1 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Regex1"));
-                if (!string.IsNullOrEmpty(replacement1) && !string.IsNullOrEmpty(regex1))
+                if (!string.IsNullOrEmpty(replacement1) && replacement1 != "< ignore >" && !string.IsNullOrEmpty(regex1))
                 {
                     this._Replacements = new List<ReplacementInfo>();
                     this._Replacements.Add(this.GetReplacement(replacement1, regex1));
@@ -700,7 +700,7 @@ namespace TridionDesktopTools.ComponentImporter
 
                 string replacement2 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Replacement2"));
                 string regex2 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Regex2"));
-                if (!string.IsNullOrEmpty(replacement2) && !string.IsNullOrEmpty(regex2))
+                if (!string.IsNullOrEmpty(replacement2) && replacement2 != "< ignore >" && !string.IsNullOrEmpty(regex2))
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();
@@ -709,7 +709,7 @@ namespace TridionDesktopTools.ComponentImporter
 
                 string replacement3 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Replacement3"));
                 string regex3 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue as string, this.cbSourceTable.SelectedValue as string, "Regex3"));
-                if (!string.IsNullOrEmpty(replacement3) && !string.IsNullOrEmpty(regex3))
+                if (!string.IsNullOrEmpty(replacement3) && replacement3 != "< ignore >" && !string.IsNullOrEmpty(regex3))
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();

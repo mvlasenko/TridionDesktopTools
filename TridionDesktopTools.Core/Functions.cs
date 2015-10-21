@@ -1906,7 +1906,6 @@ namespace TridionDesktopTools.Core
             string title = String.Format("[{0:00}0] {1}", index, sourceComponent.Title);
 
             ResultInfo result = SaveComponent(targetSchema, title, newXml, String.Empty, targetFolderUri, false);
-
             if (result == null)
                 return null;
 
@@ -2094,7 +2093,7 @@ namespace TridionDesktopTools.Core
 
                 if (sourceField == null)
                     continue;
-                
+
                 //construct Component Link to the source component
                 if (mapping.SourceField.GetFieldFullName() == "< this component link >")
                 {
@@ -2103,7 +2102,7 @@ namespace TridionDesktopTools.Core
                 }
 
                 //construct new Embedded Schema
-                if (mapping.SourceField.GetFieldFullName() == "< new >")
+                else if (mapping.SourceField.GetFieldFullName() == "< new >")
                 {
                     //create XElement if embedded schema, for primitive types default values might be used
                     if (mapping.TargetField.Field.IsEmbedded())
@@ -2122,7 +2121,7 @@ namespace TridionDesktopTools.Core
                 else if (!String.IsNullOrEmpty(sourceField.Name) && doc.Root.Element(sourceNs + sourceField.Name) != null)
                 {
                     List<XElement> elements = doc.Root.Elements(sourceNs + sourceField.Name).ToList();
-                    
+
                     //transform Embedded Schema into Component Link
                     if (mapping.SourceField.Field.IsEmbedded() && mapping.TargetField.Field.IsComponentLink())
                     {
@@ -2216,7 +2215,7 @@ namespace TridionDesktopTools.Core
             List<ComponentFieldData> fixedValues = GetFixedValues(sourceXml, sourceNs, sourceTcmId, targetSchema, targetRootElementName, targetFields, targetFolderUri, fieldMapping, results);
 
             if (fixedValues == null || fixedValues.Count == 0)
-                return String.Empty;
+                return string.Format("<{0} xmlns=\"{1}\" />", targetRootElementName, targetSchema.NamespaceUri);
 
             bool success = true;
 
@@ -2242,7 +2241,7 @@ namespace TridionDesktopTools.Core
                 }
             }
             if (!success)
-                return String.Empty;
+                return string.Format("<{0} xmlns=\"{1}\" />", targetRootElementName, targetSchema.NamespaceUri);
 
             string res = GetComponentXml(targetSchema.NamespaceUri, targetRootElementName, fixedValues).ToString();
 
@@ -2269,7 +2268,7 @@ namespace TridionDesktopTools.Core
                 }
             }
             if (!success)
-                return String.Empty;
+                return string.Format("<{0} xmlns=\"{1}\" />", targetRootElementName, targetSchema.NamespaceUri);
 
             //clear unnecessary namespaces
             res = res.Replace(String.Format("xmlns=\"{0}\"", sourceNs), String.Format("xmlns=\"{0}\"", targetSchema.NamespaceUri));
@@ -2334,7 +2333,7 @@ namespace TridionDesktopTools.Core
             List<ComponentFieldData> fixedValues = GetFixedValues(sourceDataRow.ToXml(), string.Empty, string.Empty, targetSchema, targetRootElementName, targetFields, string.Empty, fieldMapping, results);
 
             if (fixedValues == null || fixedValues.Count == 0)
-                return String.Empty;
+                return string.Format("<{0} xmlns=\"{1}\" />", targetSchema.RootElementName, targetSchema.NamespaceUri);
 
             bool success = true;
 
@@ -2358,7 +2357,7 @@ namespace TridionDesktopTools.Core
                 }
             }
             if (!success)
-                return String.Empty;
+                return string.Format("<{0} xmlns=\"{1}\" />", targetSchema.RootElementName, targetSchema.NamespaceUri);
 
             string res = GetComponentXml(targetSchema.NamespaceUri, targetRootElementName, fixedValues).ToString();
 
@@ -2413,11 +2412,6 @@ namespace TridionDesktopTools.Core
                 result.TcmId = folderUri;
                 result.Status = Status.Error;
                 result.Message = "Component title is not defined";
-            }
-
-            if (string.IsNullOrEmpty(metadataXml))
-            {
-                metadataXml = string.Format("<Metadata xmlns=\"{0}\" />", schema.NamespaceUri);
             }
 
             //check existing item
@@ -2813,7 +2807,6 @@ namespace TridionDesktopTools.Core
                 return;
 
             ResultInfo result = SaveComponent(schema, component.Title, newContent, newMetadata, component.LocationInfo.OrganizationalItem.IdRef, localize);
-
             if (result != null)
                 results.Add(result);
         }
@@ -2837,7 +2830,7 @@ namespace TridionDesktopTools.Core
             }
         }
 
-        public static void TransformComponent(string sourceComponentUri, string sourceFolderUri, string sourceSchemaUri, string targetFolderUri, string targetSchemaUri, ItemFieldDefinitionData targetComponentLink, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        public static void TransformComponent(string sourceComponentUri, string sourceFolderUri, string sourceSchemaUri, string targetFolderUri, string targetSchemaUri, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             if (String.IsNullOrEmpty(sourceComponentUri))
                 return;
@@ -2863,10 +2856,10 @@ namespace TridionDesktopTools.Core
             List<ItemFieldDefinitionData> targetMetadataFields = GetSchemaMetadataFields(targetSchemaUri);
 
             // Change schema for component
-            TransformComponent(sourceComponentUri, sourceFolderUri, sourceSchema, sourceComponentFields, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, targetComponentLink, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
+            TransformComponent(sourceComponentUri, sourceFolderUri, sourceSchema, sourceComponentFields, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
         }
 
-        private static void TransformComponent(string sourceComponentUri, string sourceFolderUri, SchemaData sourceSchema, List<ItemFieldDefinitionData> sourceComponentFields, List<ItemFieldDefinitionData> sourceMetadataFields, string targetFolderUri, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, ItemFieldDefinitionData targetComponentLink, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        private static void TransformComponent(string sourceComponentUri, string sourceFolderUri, SchemaData sourceSchema, List<ItemFieldDefinitionData> sourceComponentFields, List<ItemFieldDefinitionData> sourceMetadataFields, string targetFolderUri, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             if (String.IsNullOrEmpty(sourceComponentUri))
                 return;
@@ -2918,52 +2911,59 @@ namespace TridionDesktopTools.Core
             string newTitle = GetTransformedName(component.Title, sourceComponentUri, sourceValues, metadataValues, formatString, replacements);
 
             ResultInfo result = SaveComponent(targetSchema, newTitle, newContent, newMetadata, targetFolderUri, localize);
+            if (result != null)
+                results.Add(result);
+
+            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !x.SourceField.Field.Name.StartsWith("<"));
+            ComponentLinkFieldDefinitionData targetComponentLink = targetComponentLinkMapping == null ? null : targetComponentLinkMapping.SourceField.Field as ComponentLinkFieldDefinitionData;
 
             // save component link back to source component
-            if (result != null && result.Status == Status.Success && !String.IsNullOrEmpty(result.TcmId) && targetComponentLink != null && !String.IsNullOrEmpty(targetComponentLink.Name))
+            if (result != null && result.Status == Status.Success && !String.IsNullOrEmpty(result.TcmId) && targetComponentLink != null)
             {
                 string pubId = GetPublicationTcmId(component.Id);
                 string linkId = GetBluePrintItemTcmId(result.TcmId, pubId);
                 XElement cl = GetComponentLink(linkId, newTitle, targetComponentLink.Name);
 
-                string newSourceContent = String.Empty;
-                if (sourceComponentFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
+                ComponentFieldData sourceValue = sourceValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
+                if (sourceValue == null && !targetComponentLinkMapping.SourceField.IsMeta)
                 {
-                    ComponentFieldData sourceValue = sourceValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
-                    if (sourceValue == null)
-                    {
-                        sourceValue = new ComponentFieldData();
-                        sourceValue.SchemaField = targetComponentLink;
-                        sourceValue.Value = cl;
-                        sourceValues.Add(sourceValue);
-                    }
-
-                    newSourceContent = GetComponentXml(sourceSchema.NamespaceUri, sourceSchema.RootElementName, sourceValues).ToString();
+                    sourceValue = new ComponentFieldData();
+                    sourceValue.SchemaField = targetComponentLink;
+                    sourceValue.Value = cl;
+                    sourceValues.Add(sourceValue);
                 }
 
-                string newSourceMetadata = String.Empty;
-                if (sourceMetadataFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
-                {
-                    ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
-                    if (metadataValue == null)
-                    {
-                        metadataValue = new ComponentFieldData();
-                        metadataValue.SchemaField = targetComponentLink;
-                        metadataValue.Value = cl;
-                        metadataValues.Add(metadataValue);
-                    }
+                string newSourceContent = GetComponentXml(sourceSchema.NamespaceUri, sourceSchema.RootElementName, sourceValues).ToString();
+                newSourceContent = newSourceContent.Replace(" xmlns=\"\"", String.Empty);
 
-                    newSourceMetadata = GetComponentXml(sourceSchema.NamespaceUri, sourceSchema.RootElementName, metadataValues).ToString();
+                ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
+                if (metadataValue == null && targetComponentLinkMapping.SourceField.IsMeta)
+                {
+                    metadataValue = new ComponentFieldData();
+                    metadataValue.SchemaField = targetComponentLink;
+                    metadataValue.Value = cl;
+                    metadataValues.Add(metadataValue);
                 }
 
-                result = SaveComponent(sourceSchema, component.Title, newSourceContent, newSourceMetadata, component.LocationInfo.OrganizationalItem.IdRef, false);
+                string newSourceMetadata = string.Empty;
+                XElement newXmlSourceMetadata = GetComponentXml(sourceSchema.NamespaceUri, "Metadata", metadataValues);
+                if (newXmlSourceMetadata != null)
+                {
+                    newSourceMetadata = newXmlSourceMetadata.ToString();
+                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", String.Empty);
+                }
+                if (newSourceMetadata == string.Empty && sourceMetadataFields != null && sourceMetadataFields.Count > 0)
+                {
+                    newSourceMetadata = string.Format("<Metadata xmlns=\"{0}\" />", sourceSchema.NamespaceUri);
+                }
+
+                ResultInfo result1 = SaveComponent(sourceSchema, component.Title, newSourceContent, newSourceMetadata, component.LocationInfo.OrganizationalItem.IdRef, false);
+                if (result1 != null)
+                    results.Add(result1);
             }
-
-            if (result != null)
-                results.Add(result);
         }
 
-        public static void TransformComponentsInFolder(string sourceFolderUri, string sourceSchemaUri, string targetFolderUri, string targetSchemaUri, ItemFieldDefinitionData targetComponentLink, List<Criteria> criterias, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        public static void TransformComponentsInFolder(string sourceFolderUri, string sourceSchemaUri, string targetFolderUri, string targetSchemaUri, List<Criteria> criterias, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             sourceSchemaUri = sourceSchemaUri.GetCurrentVersionTcmId();
 
@@ -2988,7 +2988,7 @@ namespace TridionDesktopTools.Core
             // Transform components
             foreach (ItemInfo item in GetComponentsByCriterias(sourceFolderUri, sourceSchemaUri, criterias))
             {
-                TransformComponent(item.TcmId, sourceFolderUri, sourceSchema, sourceComponentFields, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, targetComponentLink, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
+                TransformComponent(item.TcmId, sourceFolderUri, sourceSchema, sourceComponentFields, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
             }
         }
 
@@ -3205,7 +3205,7 @@ namespace TridionDesktopTools.Core
             }
         }
 
-        public static void TransformTridionObjectMetadata(string sourceTridionObjectUri, string sourceContainerUri, string sourceMetadataSchemaUri, string targetFolderUri, string targetSchemaUri, ItemFieldDefinitionData targetComponentLink, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        public static void TransformTridionObjectMetadata(string sourceTridionObjectUri, string sourceContainerUri, string sourceMetadataSchemaUri, string targetFolderUri, string targetSchemaUri, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             if (String.IsNullOrEmpty(sourceTridionObjectUri))
                 return;
@@ -3230,10 +3230,10 @@ namespace TridionDesktopTools.Core
             List<ItemFieldDefinitionData> targetMetadataFields = GetSchemaMetadataFields(targetSchemaUri);
 
             // Change schema for component
-            TransformTridionObjectMetadata(sourceTridionObjectUri, sourceContainerUri, sourceMetadataSchema, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, targetComponentLink, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
+            TransformTridionObjectMetadata(sourceTridionObjectUri, sourceContainerUri, sourceMetadataSchema, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
         }
 
-        private static void TransformTridionObjectMetadata(string sourceTridionObjectUri, string sourceContainerUri, SchemaData sourceMetadataSchema, List<ItemFieldDefinitionData> sourceMetadataFields, string targetFolderUri, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, ItemFieldDefinitionData targetComponentLink, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        private static void TransformTridionObjectMetadata(string sourceTridionObjectUri, string sourceContainerUri, SchemaData sourceMetadataSchema, List<ItemFieldDefinitionData> sourceMetadataFields, string targetFolderUri, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             if (String.IsNullOrEmpty(sourceTridionObjectUri))
                 return;
@@ -3284,37 +3284,47 @@ namespace TridionDesktopTools.Core
             string newTitle = GetTransformedName(tridionObject.Title, sourceTridionObjectUri, null, metadataValues, formatString, replacements);
 
             ResultInfo result = SaveComponent(targetSchema, newTitle, newContent, newMetadata, targetFolderUri, localize);
+            if (result != null)
+                results.Add(result);
 
-            // save component link back to source component
-            if (result != null && result.Status == Status.Success && !String.IsNullOrEmpty(result.TcmId) && targetComponentLink != null && !String.IsNullOrEmpty(targetComponentLink.Name))
+            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !x.SourceField.Field.Name.StartsWith("<"));
+            ComponentLinkFieldDefinitionData targetComponentLink = targetComponentLinkMapping == null ? null : targetComponentLinkMapping.SourceField.Field as ComponentLinkFieldDefinitionData;
+
+            // save component link back to source metadata
+            if (result != null && result.Status == Status.Success && !String.IsNullOrEmpty(result.TcmId) && targetComponentLink != null)
             {
                 string pubId = GetPublicationTcmId(tridionObject.Id);
                 string linkId = GetBluePrintItemTcmId(result.TcmId, pubId);
                 XElement cl = GetComponentLink(linkId, newTitle, targetComponentLink.Name);
 
-                string newSourceMetadata = String.Empty;
-                if (sourceMetadataFields.Any(x => x.Name == targetComponentLink.Name && x.GetFieldType() == targetComponentLink.GetFieldType()))
+                ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
+                if (metadataValue == null && targetComponentLinkMapping.SourceField.IsMeta)
                 {
-                    ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
-                    if (metadataValue == null)
-                    {
-                        metadataValue = new ComponentFieldData();
-                        metadataValue.SchemaField = targetComponentLink;
-                        metadataValue.Value = cl;
-                        metadataValues.Add(metadataValue);
-                    }
-
-                    newSourceMetadata = GetComponentXml(sourceMetadataSchema.NamespaceUri, sourceMetadataSchema.RootElementName, metadataValues).ToString();
+                    metadataValue = new ComponentFieldData();
+                    metadataValue.SchemaField = targetComponentLink;
+                    metadataValue.Value = cl;
+                    metadataValues.Add(metadataValue);
                 }
 
-                result = SaveTridionObjectMetadata(sourceMetadataSchema, tridionObject.Title, newSourceMetadata, tridionObject.LocationInfo.OrganizationalItem.IdRef, false);
-            }
+                string newSourceMetadata = string.Empty;
+                XElement newXmlSourceMetadata = GetComponentXml(sourceMetadataSchema.NamespaceUri, "Metadata", metadataValues);
+                if (newXmlSourceMetadata != null)
+                {
+                    newSourceMetadata = newXmlSourceMetadata.ToString();
+                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", String.Empty);
+                }
+                if (newSourceMetadata == string.Empty && sourceMetadataFields != null && sourceMetadataFields.Count > 0)
+                {
+                    newSourceMetadata = string.Format("<Metadata xmlns=\"{0}\" />", sourceMetadataSchema.NamespaceUri);
+                }
 
-            if (result != null)
-                results.Add(result);
+                ResultInfo result1 = SaveTridionObjectMetadata(sourceMetadataSchema, tridionObject.Title, newSourceMetadata, tridionObject.LocationInfo.OrganizationalItem.IdRef, false);
+                if (result1 != null)
+                    results.Add(result1);
+            }
         }
 
-        public static void TransformMetadataForTridionObjectsInContainer(string sourceContainerUri, string sourceMetadataSchemaUri, string targetFolderUri, string targetSchemaUri, ItemFieldDefinitionData targetComponentLink, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
+        public static void TransformMetadataForTridionObjectsInContainer(string sourceContainerUri, string sourceMetadataSchemaUri, string targetFolderUri, string targetSchemaUri, string formatString, List<ReplacementInfo> replacements, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
         {
             sourceMetadataSchemaUri = sourceMetadataSchemaUri.GetCurrentVersionTcmId();
 
@@ -3338,7 +3348,7 @@ namespace TridionDesktopTools.Core
             // Transform tridion object metadata into components
             foreach (ItemInfo item in GetItemsByParentContainer(sourceContainerUri, true))
             {
-                TransformTridionObjectMetadata(item.TcmId, sourceContainerUri, sourceMetadataSchema, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, targetComponentLink, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
+                TransformTridionObjectMetadata(item.TcmId, sourceContainerUri, sourceMetadataSchema, sourceMetadataFields, targetFolderUri, targetSchema, targetComponentFields, targetMetadataFields, formatString, replacements, localize, historyMapping, customComponentTransformer, customMetadataTransformer, results);
             }
         }
 
@@ -3946,7 +3956,6 @@ namespace TridionDesktopTools.Core
                     title = string.Format("Component {0}", i);
 
                 ResultInfo result = SaveComponent(targetSchema, title, newContent, newMetadata, targetFolderUri, localize);
-                
                 if (result != null)
                     results.Add(result);
             }

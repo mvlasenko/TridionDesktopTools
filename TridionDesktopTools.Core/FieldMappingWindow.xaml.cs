@@ -87,14 +87,6 @@ namespace TridionDesktopTools.Core
                 List<FieldInfo> sourceSchemaFields = Functions.GetDatabaseTableFields(this.DbHost, this.DbUsername, this.DbPassword, this.SourceDatabase, this.SourceTable);
 
                 this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.Host, this.SourceDatabase, this.SourceTable, this.TargetSchemaUri));
-                foreach (HistoryItemMappingInfo historyMapping in this.HistoryMapping)
-                {
-                    foreach (FieldMappingInfo mapping in historyMapping.Mapping)
-                    {
-                        mapping.SourceFields = sourceSchemaFields;
-                        mapping.TargetFields = this._TargetSchemaFields;
-                    }
-                }
 
                 List<FieldMappingInfo> fieldMapping = Functions.GetDefaultFieldMapping(this.Host, sourceSchemaFields, this._TargetSchemaFields, this.TargetSchemaUri);
                 
@@ -102,6 +94,18 @@ namespace TridionDesktopTools.Core
                 {
                     this.HistoryMapping = new HistoryMappingInfo();
                     this.HistoryMapping.Add(new HistoryItemMappingInfo { Mapping = fieldMapping, Current = true });
+                }
+
+                if (this.HistoryMapping != null)
+                {
+                    foreach (HistoryItemMappingInfo historyMapping in this.HistoryMapping)
+                    {
+                        foreach (FieldMappingInfo mapping in historyMapping.Mapping)
+                        {
+                            mapping.SourceFields = sourceSchemaFields;
+                            mapping.TargetFields = this._TargetSchemaFields;
+                        }
+                    }
                 }
 
                 if (this.HistoryMapping != null)

@@ -22,7 +22,6 @@ namespace TridionDesktopTools.ComponentTransformer
         public TridionSelectorMode TargetTridionSelectorMode { get; set; }
 
         public HistoryMappingInfo HistoryMapping { get; set; }
-        public ItemFieldDefinitionData TargetComponentLink { get; set; }
 
         private List<Criteria> _Criterias;
         private string _FormatString;
@@ -556,6 +555,17 @@ namespace TridionDesktopTools.ComponentTransformer
             this.SetCustomTransformers();
             this.SetCustomNameTransformers();
 
+            if (this.HistoryMapping == null)
+            {
+                this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceSchema.TcmId, targetSchema.TcmId));
+            }
+
+            if (this.HistoryMapping == null && (this.CustomComponentTransformer == null || this.CustomMetadataTransformer == null))
+            {
+                MessageBox.Show("Neither field mapping nor custom transformers is set. Please set mapping or select custom transformer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             //inform that custom transfromation is selected
             if (this.CustomComponentTransformer != null || this.CustomMetadataTransformer != null)
             {
@@ -573,19 +583,8 @@ namespace TridionDesktopTools.ComponentTransformer
                     messsage = String.Format("Custom metadata taranaformation {0} is used.\n\nContinue?", this.CustomMetadataTransformer.TypeName);
                 }
 
-                if(MessageBox.Show(messsage, "Custom Transformations", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
+                if (MessageBox.Show(messsage, "Custom Transformations", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
                     return;
-            }
-
-            if (this.HistoryMapping == null)
-            {
-                this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceSchema.TcmId, targetSchema.TcmId));
-            }
-
-            if (this.HistoryMapping == null && this.CustomComponentTransformer == null && this.CustomMetadataTransformer == null)
-            {
-                MessageBox.Show("Neither field mapping nor custom transformers is set. Please set mapping or select custom transformer and try again.", "Field Mapping", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
             }
 
             if (this.HistoryMapping != null)
@@ -697,26 +696,26 @@ namespace TridionDesktopTools.ComponentTransformer
                 if (sourceItemType == ItemType.Component)
                 {
                     // copy / transform component
-                    Functions.TransformComponent(this.SourceTridionObject.TcmId, string.Empty, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this.TargetComponentLink, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
+                    Functions.TransformComponent(this.SourceTridionObject.TcmId, string.Empty, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
                 }
                 // folder
                 if (sourceItemType == ItemType.Folder)
                 {
                     // copy / transform all components in folder
-                    Functions.TransformComponentsInFolder(this.SourceTridionObject.TcmId, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this.TargetComponentLink, this._Criterias, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
+                    Functions.TransformComponentsInFolder(this.SourceTridionObject.TcmId, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this._Criterias, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
                 }
                 
                 // single page
                 if (sourceItemType == ItemType.Page)
                 {
                     // copy / transform metadata
-                    Functions.TransformTridionObjectMetadata(this.SourceTridionObject.TcmId, string.Empty, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this.TargetComponentLink, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
+                    Functions.TransformTridionObjectMetadata(this.SourceTridionObject.TcmId, string.Empty, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
                 }
                 // structure group
                 if (sourceItemType == ItemType.StructureGroup)
                 {
                     // copy / transform all pages in structure group
-                    Functions.TransformMetadataForTridionObjectsInContainer(this.SourceTridionObject.TcmId, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this.TargetComponentLink, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
+                    Functions.TransformMetadataForTridionObjectsInContainer(this.SourceTridionObject.TcmId, sourceSchemaTcmId, targetTridionObjectContainerUri, targetSchema.TcmId, this._FormatString, this._Replacements, localize, this.HistoryMapping, this.CustomComponentTransformer, this.CustomMetadataTransformer, results);
                 }
             }
 
@@ -840,7 +839,7 @@ namespace TridionDesktopTools.ComponentTransformer
             {
                 string replacement1 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Replacement1"));
                 string regex1 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Regex1"));
-                if (!string.IsNullOrEmpty(replacement1) && !string.IsNullOrEmpty(regex1))
+                if (!string.IsNullOrEmpty(replacement1) && replacement1 != "< ignore >" && !string.IsNullOrEmpty(regex1))
                 {
                     this._Replacements = new List<ReplacementInfo>();
                     this._Replacements.Add(this.GetReplacement(replacement1, regex1, sourceSchemaFields));
@@ -848,7 +847,7 @@ namespace TridionDesktopTools.ComponentTransformer
 
                 string replacement2 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Replacement2"));
                 string regex2 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Regex2"));
-                if (!string.IsNullOrEmpty(replacement2) && !string.IsNullOrEmpty(regex2))
+                if (!string.IsNullOrEmpty(replacement2) && replacement2 != "< ignore >" && !string.IsNullOrEmpty(regex2))
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();
@@ -857,7 +856,7 @@ namespace TridionDesktopTools.ComponentTransformer
 
                 string replacement3 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Replacement3"));
                 string regex3 = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Regex3"));
-                if (!string.IsNullOrEmpty(replacement3) && !string.IsNullOrEmpty(regex3))
+                if (!string.IsNullOrEmpty(replacement3) && replacement3 != "< ignore >" && !string.IsNullOrEmpty(regex3))
                 {
                     if (this._Replacements == null)
                         this._Replacements = new List<ReplacementInfo>();
