@@ -95,6 +95,7 @@
     </Compile>
     <Compile Include="TbbInfo.cs" />
     <Compile Include="TridionObjectInfo.cs" />
+    <Compile Include="UIHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\fld.png" />

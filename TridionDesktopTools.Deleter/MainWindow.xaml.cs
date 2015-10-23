@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using Tridion.ContentManager.CoreService.Client;
 using TridionDesktopTools.Core;
 
@@ -158,7 +157,7 @@ namespace TridionDesktopTools.Deleter
 
                 if (!string.IsNullOrEmpty(this._SchemaUri) && this._Criterias != null && this._Criterias.Any())
                 {
-                    this.btnFilter.Foreground = new SolidColorBrush(Colors.Green);
+                    this.btnFilter.SetEnabledGreen();
                     this._CheckResults = null;
                 }
             }

@@ -45,9 +45,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Test2.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Test1.cs" />
+    <Compile Include="PageMetadataToComponentWithNavigationOptions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TridionDesktopTools.Core\TridionDesktopTools.Core.csproj">

@@ -1560,6 +1560,16 @@ namespace TridionDesktopTools.Core
             List<FieldInfo> res = new List<FieldInfo>();
             foreach (FieldInfo field in list)
             {
+                if (field.Field.IsComponentLink())
+                {
+                    string childSchemaId = ((ComponentLinkFieldDefinitionData)field.Field).AllowedTargetSchemas[0].IdRef;
+                    SchemaData childSchema = Client.Read(childSchemaId, null) as SchemaData;
+                    if (childSchema != null)
+                    {
+                        field.RootElementName = childSchema.RootElementName;
+                    }
+                }
+
                 res.Add(field);
 
                 if (field.Level < 3 && (field.Field.IsEmbedded() || field.Field.IsComponentLink() && !field.Field.IsMultimediaComponentLink() && ((ComponentLinkFieldDefinitionData)field.Field).AllowedTargetSchemas.Any()))
@@ -2256,8 +2266,6 @@ namespace TridionDesktopTools.Core
                 }
                 else
                 {
-                    success = false;
-
                     ResultInfo result = new ResultInfo();
                     result.ItemType = ItemType.Component;
                     result.TcmId = id;
@@ -2265,10 +2273,10 @@ namespace TridionDesktopTools.Core
                     RepositoryLocalObjectData item = ReadItem(id) as RepositoryLocalObjectData;
                     result.Message = String.Format("Item \"{0}\" doesn't exist in target publication", item == null ? id : item.GetWebDav().CutPath("/", 90, true));
                     results.Add(result);
+
+                    throw new Exception(result.Message);
                 }
             }
-            if (!success)
-                return string.Format("<{0} xmlns=\"{1}\" />", targetRootElementName, targetSchema.NamespaceUri);
 
             //clear unnecessary namespaces
             res = res.Replace(String.Format("xmlns=\"{0}\"", sourceNs), String.Format("xmlns=\"{0}\"", targetSchema.NamespaceUri));
@@ -2521,73 +2529,73 @@ namespace TridionDesktopTools.Core
         {
             //check existing item
             List<ItemInfo> targetContainerItems = GetItemsByParentContainer(containerUri);
-            if (targetContainerItems.Any(x => x.Title == title))
+            if (targetContainerItems.All(x => x.Title != title))
+                return null;
+
+            //update existing tridionObject
+            string tridionObjectUri = targetContainerItems.First(x => x.Title == title).TcmId;
+
+            ResultInfo result = new ResultInfo();
+            result.ItemType = GetItemType(tridionObjectUri);
+
+            RepositoryLocalObjectData tridionObject = ReadItem(tridionObjectUri) as RepositoryLocalObjectData;
+
+            //only tridionObject of same name and title
+            if (tridionObject != null && tridionObject.MetadataSchema.IdRef.GetId() == metadataSchema.Id.GetId())
             {
-                //update existing tridionObject
-                string tridionObjectUri = targetContainerItems.First(x => x.Title == title).TcmId;
+                if ((tridionObject.Metadata.PrettyXml() == metadataXml.PrettyXml()))
+                    return null;
 
-                ResultInfo result = new ResultInfo();
-                result.ItemType = GetItemType(tridionObjectUri);
-
-                RepositoryLocalObjectData tridionObject = ReadItem(tridionObjectUri) as RepositoryLocalObjectData;
-
-                //only tridionObject of same name and title
-                if (tridionObject != null && tridionObject.MetadataSchema.IdRef.GetId() == metadataSchema.Id.GetId())
+                //localize if item is shared
+                if (IsShared(tridionObjectUri))
                 {
-                    if ((tridionObject.Metadata.PrettyXml() == metadataXml.PrettyXml()))
-                        return null;
-
-                    //localize if item is shared
-                    if (IsShared(tridionObjectUri))
+                    if (localize)
                     {
-                        if (localize)
-                        {
-                            Localize(tridionObjectUri);
-                        }
-                        else
-                        {
-                            tridionObjectUri = GetBluePrintTopLocalizedTcmId(tridionObjectUri);
-                        }
+                        Localize(tridionObjectUri);
                     }
-
-                    result.TcmId = tridionObjectUri;
-
-                    try
+                    else
                     {
-                        tridionObject = Client.CheckOut(tridionObjectUri, true, new ReadOptions());
-                    }
-                    catch
-                    {
-                    }
-
-                    tridionObject.Metadata = metadataXml;
-
-                    try
-                    {
-                        Client.Update(tridionObject, new ReadOptions());
-                        Client.CheckIn(tridionObjectUri, new ReadOptions());
-
-                        result.Status = Status.Success;
-                        result.Message = String.Format("Updated item \"{0}\"", tridionObject.GetWebDav().CutPath("/", 80, true));
-                    }
-                    catch (Exception ex)
-                    {
-                        Client.UndoCheckOut(tridionObjectUri, true, new ReadOptions());
-
-                        result.Status = Status.Error;
-                        result.StackTrace = ex.StackTrace;
-                        result.Message = String.Format("Error updating item \"{0}\"", tridionObject.GetWebDav().CutPath("/", 80, true));
+                        tridionObjectUri = GetBluePrintTopLocalizedTcmId(tridionObjectUri);
                     }
                 }
-                else
+
+                result.TcmId = tridionObjectUri;
+
+                try
                 {
-                    result.TcmId = containerUri;
+                    tridionObject = Client.CheckOut(tridionObjectUri, true, new ReadOptions());
+                }
+                catch
+                {
+                }
+
+                tridionObject.Metadata = metadataXml;
+
+                try
+                {
+                    Client.Update(tridionObject, new ReadOptions());
+                    Client.CheckIn(tridionObjectUri, new ReadOptions());
+
+                    result.Status = Status.Success;
+                    result.Message = String.Format("Updated item \"{0}\"", tridionObject.GetWebDav().CutPath("/", 80, true));
+                }
+                catch (Exception ex)
+                {
+                    Client.UndoCheckOut(tridionObjectUri, true, new ReadOptions());
+
                     result.Status = Status.Error;
-                    result.Message = String.Format("Error updating page \"{0}\"", title);
+                    result.StackTrace = ex.StackTrace;
+                    result.Message = String.Format("Error updating item \"{0}\"", tridionObject.GetWebDav().CutPath("/", 80, true));
                 }
             }
+            else
+            {
+                result.TcmId = containerUri;
+                result.Status = Status.Error;
+                result.Message = String.Format("Error updating page \"{0}\"", title);
+            }
 
-            return null;
+            return result;
         }
 
         public static void ChangeSchemaForComponent(string componentUri, string sourceSchemaUri, string targetSchemaUri, string targetFolderUri, bool localize, HistoryMappingInfo historyMapping, CustomTransformerInfo customComponentTransformer, CustomTransformerInfo customMetadataTransformer, List<ResultInfo> results)
@@ -2914,7 +2922,7 @@ namespace TridionDesktopTools.Core
             if (result != null)
                 results.Add(result);
 
-            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !x.SourceField.Field.Name.StartsWith("<"));
+            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !String.IsNullOrEmpty(x.SourceField.Field.Name) && !x.SourceField.Field.Name.StartsWith("<"));
             ComponentLinkFieldDefinitionData targetComponentLink = targetComponentLinkMapping == null ? null : targetComponentLinkMapping.SourceField.Field as ComponentLinkFieldDefinitionData;
 
             // save component link back to source component
@@ -3182,7 +3190,6 @@ namespace TridionDesktopTools.Core
                 return;
 
             ResultInfo result = SaveTridionObjectMetadata(sourceMetadataSchema, tridionObject.Title, newMetadata, tridionObject.LocationInfo.OrganizationalItem.IdRef, localize);
-
             if (result != null)
                 results.Add(result);
         }
@@ -3287,7 +3294,7 @@ namespace TridionDesktopTools.Core
             if (result != null)
                 results.Add(result);
 
-            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !x.SourceField.Field.Name.StartsWith("<"));
+            FieldMappingInfo targetComponentLinkMapping = fieldMapping.FirstOrDefault(x => x.TargetFieldFullName == "< target component link >" && x.SourceField != null && x.SourceField.Field != null && !String.IsNullOrEmpty(x.SourceField.Field.Name) && !x.SourceField.Field.Name.StartsWith("<"));
             ComponentLinkFieldDefinitionData targetComponentLink = targetComponentLinkMapping == null ? null : targetComponentLinkMapping.SourceField.Field as ComponentLinkFieldDefinitionData;
 
             // save component link back to source metadata
@@ -3887,7 +3894,6 @@ namespace TridionDesktopTools.Core
                 item.Name = row["COLUMN_NAME"].ToString();
                 
                 FieldInfo field = new FieldInfo();
-                field.IsMeta = false;
                 field.Field = item;
                 field.Level = 0;
                 res.Add(field);
@@ -6290,7 +6296,13 @@ namespace TridionDesktopTools.Core
             if (field == null)
                 return String.Empty;
 
-            return field.Parent == null || breakComponentLinkPath && field.Parent.Field.IsComponentLink() ? field.Field.Name : String.Format("{0}/{1}", field.Parent.GetFieldNamePath(), field.Field.Name);
+            if (breakComponentLinkPath && field.Field.IsComponentLink())
+                return field.IsMeta ? "Metadata" : field.RootElementName;
+
+            if (field.Parent == null)
+                return field.Field.Name;
+
+            return String.Format("{0}/{1}", field.Parent.GetFieldNamePath(breakComponentLinkPath), field.Field.Name);
         }
 
         public static string GetDomainName(this string url)

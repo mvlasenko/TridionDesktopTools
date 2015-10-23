@@ -28,17 +28,6 @@ namespace TridionDesktopTools.ComponentTransformer
             this.cbCustomComponentTransformer.DisplayMemberPath = "Title";
             this.cbCustomComponentTransformer.SelectedIndex = this.CustomComponentTransformer != null ? customTransformers.FindIndex(x => x.TypeName == this.CustomComponentTransformer.TypeName) : 0;
 
-            ItemType itemType = Functions.GetItemType(this.SourceTridionObject.TcmId);
-            if (itemType == ItemType.Component || itemType == ItemType.Folder)
-            {
-                this.cbCustomComponentTransformer.IsEnabled = true;
-            }
-            else
-            {
-                this.cbCustomComponentTransformer.SelectedIndex = 0;
-                this.cbCustomComponentTransformer.IsEnabled = false;
-            }
-
             this.cbCustomMetadataTransformer.ItemsSource = customTransformers;
             this.cbCustomMetadataTransformer.DisplayMemberPath = "Title";
             this.cbCustomMetadataTransformer.SelectedIndex = this.CustomMetadataTransformer != null ? customTransformers.FindIndex(x => x.TypeName == this.CustomMetadataTransformer.TypeName) : 0;

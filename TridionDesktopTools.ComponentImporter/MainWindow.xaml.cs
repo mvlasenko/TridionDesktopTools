@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using Tridion.ContentManager.CoreService.Client;
 using TridionDesktopTools.Core;
 using FieldInfo = TridionDesktopTools.Core.FieldInfo;
@@ -225,37 +224,28 @@ namespace TridionDesktopTools.ComponentImporter
 
             this._SourceSchemaFields = Functions.GetDatabaseTableFields(this.txtDbHost.Text, this.txtDbUsername.Text, this.txtDbPassword.Password, this.cbSourceDatabase.SelectedValue.ToString(), sourceTable);
 
-            this.lblSourceTableContent.Visibility = Visibility.Visible;
-            this.dgSourceTableContent.Visibility = Visibility.Visible;
-
-            this.ChangeButtonsVisibility();
-
-            //save to isolated stoage
-            Functions.SaveToIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue.ToString(), "SourceTable"), sourceTable);
-
             if (this.cbSourceDatabase.SelectedIndex > 0 && this.cbSourceTable.SelectedIndex > 0 && this.cbTargetSchema.SelectedIndex > 0)
             {
                 ItemInfo targetSchema = this.cbTargetSchema.SelectedValue as ItemInfo;
                 if (targetSchema != null)
                 {
                     this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, this.cbSourceDatabase.SelectedValue.ToString(), sourceTable, targetSchema.TcmId));
-                    this.btnFieldMapping.Foreground = this.HistoryMapping == null ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green);
                 }
 
                 this.SetCustomImporters();
-                if (this.CustomComponentImporter != null || this.CustomMetadataImporter != null)
-                {
-                    this.btnCustomImport.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.SetCustomNameTransformers();
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.chkLocalize.IsChecked = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue.ToString(), sourceTable, "Localize")).ToLower() == "true";
             }
+
+            //save to isolated stoage
+            Functions.SaveToIsolatedStorage(Functions.GetId(this.txtDbHost.Text, this.cbSourceDatabase.SelectedValue.ToString(), "SourceTable"), sourceTable);
+
+            this.lblSourceTableContent.Visibility = Visibility.Visible;
+            this.dgSourceTableContent.Visibility = Visibility.Visible;
+
+            this.ChangeButtonsVisibility();
         }
 
         #endregion
@@ -385,7 +375,7 @@ namespace TridionDesktopTools.ComponentImporter
 
             this.ChangeButtonsVisibility();
         }
-        
+
         private void treeTargetTridionFolder_OnMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             ItemInfo item = this.treeTargetTridionFolder.SelectedItem as ItemInfo;
@@ -414,20 +404,11 @@ namespace TridionDesktopTools.ComponentImporter
                 if (sourceDatabase != null && sourceTable != null)
                 {
                     this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceDatabase, sourceTable, targetSchema.TcmId));
-                    this.btnFieldMapping.Foreground = this.HistoryMapping == null ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green);
                 }
 
                 this.SetCustomImporters();
-                if (this.CustomComponentImporter != null || this.CustomMetadataImporter != null)
-                {
-                    this.btnCustomImport.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.SetCustomNameTransformers();
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.chkLocalize.IsChecked = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtDbHost.Text, sourceDatabase, sourceTable, "Localize")).ToLower() == "true";
             }
@@ -463,10 +444,7 @@ namespace TridionDesktopTools.ComponentImporter
             if (res)
             {
                 this.HistoryMapping = dialog.HistoryMapping;
-                if (this.HistoryMapping != null)
-                {
-                    this.btnFieldMapping.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -485,10 +463,7 @@ namespace TridionDesktopTools.ComponentImporter
                 this._FormatString = dialog.FormatString;
                 this._Replacements = dialog.Replacements;
 
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -520,14 +495,7 @@ namespace TridionDesktopTools.ComponentImporter
                 
                 Functions.SaveToIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), "CustomMetadataImporter", sourceTable, targetSchema.TcmId), dialog.CustomMetadataImporter != null ? dialog.CustomMetadataImporter.TypeName : string.Empty);
 
-                if (this.CustomComponentImporter == null && this.CustomMetadataImporter == null)
-                {
-                    this.btnCustomImport.Foreground = new SolidColorBrush(Colors.Black);
-                }
-                else
-                {
-                    this.btnCustomImport.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -560,15 +528,15 @@ namespace TridionDesktopTools.ComponentImporter
                 string messsage = "";
                 if (this.CustomComponentImporter != null && this.CustomMetadataImporter != null)
                 {
-                    messsage = String.Format("Custom imports {0} and {1} are used.\n\nContinue?", this.CustomComponentImporter.TypeName, this.CustomMetadataImporter.TypeName);
+                    messsage = String.Format("Custom imports {0} and {1} are used.\n\nContinue?", this.CustomComponentImporter.Title, this.CustomMetadataImporter.Title);
                 }
                 else if (this.CustomComponentImporter != null)
                 {
-                    messsage = String.Format("Custom component import {0} is used.\n\nContinue?", this.CustomComponentImporter.TypeName);
+                    messsage = String.Format("Custom component import {0} is used.\n\nContinue?", this.CustomComponentImporter.Title);
                 }
                 else if (this.CustomMetadataImporter != null)
                 {
-                    messsage = String.Format("Custom metadata import {0} is used.\n\nContinue?", this.CustomMetadataImporter.TypeName);
+                    messsage = String.Format("Custom metadata import {0} is used.\n\nContinue?", this.CustomMetadataImporter.Title);
                 }
 
                 if (MessageBox.Show(messsage, "Custom import", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
@@ -652,10 +620,28 @@ namespace TridionDesktopTools.ComponentImporter
 
             if (this.spSettingButtons.Visibility == Visibility.Visible)
             {
-                string sourceTable = this.cbSourceTable.SelectedValue as string;
-                ItemInfo targetSchema = this.cbTargetSchema.SelectedValue as ItemInfo;
-                this.btnFieldMapping.IsEnabled = sourceTable != null && targetSchema != null && targetSchema.SchemaType == SchemaType.Component;
-                this.btnCustomImport.IsEnabled = sourceTable != null && targetSchema != null;
+                if (this.HistoryMapping == null)
+                    this.btnFieldMapping.SetEnabledRed();
+                else
+                    this.btnFieldMapping.SetEnabledGreen();
+
+                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
+                {
+                    this.btnNameTransform.SetEnabledGreen();
+                }
+                else
+                {
+                    this.btnNameTransform.SetEnabled();
+                }
+
+                if (this.CustomComponentImporter != null || this.CustomMetadataImporter != null)
+                {
+                    this.btnCustomImport.SetEnabledGreen();
+                }
+                else
+                {
+                    this.btnCustomImport.SetEnabled();
+                }
             }
         }
 

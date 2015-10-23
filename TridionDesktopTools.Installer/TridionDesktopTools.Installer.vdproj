@@ -52,13 +52,13 @@
         "Entry"
         {
         "MsmKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
-        "OwnerKey" = "8:_99A491091F0F7C722E641DCEB5ECD6EE"
+        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
         "MsmKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
-        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
+        "OwnerKey" = "8:_99A491091F0F7C722E641DCEB5ECD6EE"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -148,6 +148,12 @@
         "Entry"
         {
         "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
+        "OwnerKey" = "8:_5E8E49CFC6104E4A9D99F6E95FF768D4"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
         "OwnerKey" = "8:_9F6E6227CC61F17C88230B9698D9A05B"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -185,12 +191,6 @@
         {
         "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
         "OwnerKey" = "8:_5F669570B8804246B9AF6E987EB5CFAA"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_5E8E49CFC6104E4A9D99F6E95FF768D4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -226,7 +226,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
+        "OwnerKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -256,6 +256,12 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
+        "OwnerKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_5F669570B8804246B9AF6E987EB5CFAA"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -275,12 +281,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_9F6E6227CC61F17C88230B9698D9A05B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
         "MsmSig" = "8:_UNDEFINED"
         }
     }
@@ -938,15 +938,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:SDL Tridion Desktop Tools"
-        "ProductCode" = "8:{3BAF577F-F40D-4A93-B8A4-5DAF3717F348}"
-        "PackageCode" = "8:{7B594961-221C-4165-AA31-EBE6B43BAA64}"
+        "ProductCode" = "8:{578FB172-6A1B-44F1-A478-F808CAB230C6}"
+        "PackageCode" = "8:{19A5BA2C-19FC-4AD1-A8B2-63216938A718}"
         "UpgradeCode" = "8:{6AAF6F6C-16B5-4DBB-8CBB-4747139750EF}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.6"
+        "ProductVersion" = "8:3.7"
         "Manufacturer" = "8:Mark Vlasenko"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using Tridion.ContentManager.CoreService.Client;
 using TridionDesktopTools.Core;
 using FieldInfo = TridionDesktopTools.Core.FieldInfo;
@@ -226,8 +225,6 @@ namespace TridionDesktopTools.ComponentTransformer
                 }
             }
 
-            this.btnFilter.IsEnabled = item.ItemType == ItemType.Folder || item.ItemType == ItemType.StructureGroup;
-
             this.lblSourceSchema.Visibility = Visibility.Visible;
             this.cbSourceSchema.Visibility = Visibility.Visible;
 
@@ -337,20 +334,11 @@ namespace TridionDesktopTools.ComponentTransformer
                 if (targetSchema != null)
                 {
                     this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceSchema.TcmId, targetSchema.TcmId));
-                    this.btnFieldMapping.Foreground = this.HistoryMapping == null ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green);
                 }
 
                 this.SetCustomTransformers();
-                if (this.CustomComponentTransformer != null || this.CustomMetadataTransformer != null)
-                {
-                    this.btnCustomTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.SetCustomNameTransformers();
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.chkLocalize.IsChecked = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Localize")).ToLower() == "true";
             }
@@ -379,22 +367,13 @@ namespace TridionDesktopTools.ComponentTransformer
                 if (sourceSchema != null)
                 {
                     this.HistoryMapping = Functions.GetHistoryMapping(Functions.GetId(this.txtHost.Text, sourceSchema.TcmId, targetSchema.TcmId));
-                    this.btnFieldMapping.Foreground = this.HistoryMapping == null ? new SolidColorBrush(Colors.Red) : new SolidColorBrush(Colors.Green);
 
                     this.chkLocalize.IsChecked = Functions.GetFromIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), sourceSchema.TcmId, "Localize")).ToLower() == "true";
                 }
 
                 this.SetCustomTransformers();
-                if (this.CustomComponentTransformer != null || this.CustomMetadataTransformer != null)
-                {
-                    this.btnCustomTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
 
                 this.SetCustomNameTransformers();
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
             }
 
             this.ChangeButtonsVisibility();
@@ -457,10 +436,7 @@ namespace TridionDesktopTools.ComponentTransformer
             if (res)
             {
                 this._Criterias = dialog.Criterias;
-                if (this._Criterias != null && this._Criterias.Any())
-                {
-                    this.btnFilter.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -481,10 +457,7 @@ namespace TridionDesktopTools.ComponentTransformer
             if (res)
             {
                 this.HistoryMapping = dialog.HistoryMapping;
-                if (this.HistoryMapping != null)
-                {
-                    this.btnFieldMapping.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -504,10 +477,7 @@ namespace TridionDesktopTools.ComponentTransformer
                 this._FormatString = dialog.FormatString;
                 this._Replacements = dialog.Replacements;
 
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
-                {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -537,10 +507,7 @@ namespace TridionDesktopTools.ComponentTransformer
                 Functions.SaveToIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), "CustomComponentTransformer", sourceSchema.TcmId, targetSchema.TcmId), dialog.CustomComponentTransformer != null ? dialog.CustomComponentTransformer.TypeName : string.Empty);
                 Functions.SaveToIsolatedStorage(Functions.GetId(this.txtHost.Text.GetDomainName(), "CustomMetadataTransformer", sourceSchema.TcmId, targetSchema.TcmId), dialog.CustomMetadataTransformer != null ? dialog.CustomMetadataTransformer.TypeName : string.Empty);
 
-                if (this.CustomComponentTransformer != null || this.CustomMetadataTransformer != null)
-                {
-                    this.btnCustomTransform.Foreground = new SolidColorBrush(Colors.Green);
-                }
+                this.ChangeButtonsVisibility();
             }
         }
 
@@ -572,15 +539,15 @@ namespace TridionDesktopTools.ComponentTransformer
                 string messsage = "";
                 if (this.CustomComponentTransformer != null && this.CustomMetadataTransformer != null)
                 {
-                    messsage = String.Format("Custom taranaformations {0} and {1} are used.\n\nContinue?", this.CustomComponentTransformer.TypeName, this.CustomMetadataTransformer.TypeName);
+                    messsage = String.Format("Custom transformations {0} and {1} are used.\n\nContinue?", this.CustomComponentTransformer.Title, this.CustomMetadataTransformer.Title);
                 }
                 else if (this.CustomComponentTransformer != null)
                 {
-                    messsage = String.Format("Custom component taranaformation {0} is used.\n\nContinue?", this.CustomComponentTransformer.TypeName);
+                    messsage = String.Format("Custom component transformation {0} is used.\n\nContinue?", this.CustomComponentTransformer.Title);
                 }
                 else if (this.CustomMetadataTransformer != null)
                 {
-                    messsage = String.Format("Custom metadata taranaformation {0} is used.\n\nContinue?", this.CustomMetadataTransformer.TypeName);
+                    messsage = String.Format("Custom metadata transformation {0} is used.\n\nContinue?", this.CustomMetadataTransformer.Title);
                 }
 
                 if (MessageBox.Show(messsage, "Custom Transformations", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.No)
@@ -773,28 +740,58 @@ namespace TridionDesktopTools.ComponentTransformer
             ItemInfo sourceSchema = this.cbSourceSchema.SelectedValue as ItemInfo;
             ItemInfo targetSchema = this.cbTargetSchema.SelectedValue as ItemInfo;
 
-            this.btnFilter.IsEnabled = sourceItemType == ItemType.Folder;
-
-            this.btnFieldMapping.IsEnabled = sourceSchema != null && targetSchema != null && (sourceSchema.SchemaType == SchemaType.Component || sourceSchema.SchemaType == SchemaType.Multimedia) && (targetSchema.SchemaType == SchemaType.Component || targetSchema.SchemaType == SchemaType.Multimedia);
-
-            bool sameFolder = this.chkSameFolder.IsChecked == true || this.SourceTridionObject.TcmId == this.TargetTridionFolder.TcmId;
-
-            if (sameFolder)
-            {
-                this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Black);
-                this.btnNameTransform.IsEnabled = false;
-            }
+            if (sourceItemType != ItemType.Folder && sourceItemType != ItemType.StructureGroup)
+                this.btnFilter.SetDisabled();
             else
             {
-                this.btnNameTransform.IsEnabled = true;
-                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
+                if (this._Criterias != null && this._Criterias.Any())
                 {
-                    this.btnNameTransform.Foreground = new SolidColorBrush(Colors.Green);
+                    this.btnFilter.SetEnabledGreen();
+                }
+                else
+                {
+                    this.btnFilter.SetEnabled();
                 }
             }
 
-            this.btnCustomTransform.IsEnabled = this.SourceTridionObject != null && sourceSchema != null && targetSchema != null;
-            
+            if (this.HistoryMapping == null)
+                this.btnFieldMapping.SetEnabledRed();
+            else
+                this.btnFieldMapping.SetEnabledGreen();
+
+            bool sameFolder = this.chkSameFolder.IsChecked == true || this.SourceTridionObject.TcmId == this.TargetTridionFolder.TcmId;
+            if (sameFolder)
+            {
+                this.btnNameTransform.SetDisabled();
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(this._FormatString) && this._Replacements != null && this._Replacements.Any())
+                {
+                    this.btnNameTransform.SetEnabledGreen();
+                }
+                else
+                {
+                    this.btnNameTransform.SetEnabled();
+                }
+            }
+
+            if (this.SourceTridionObject == null || sourceSchema == null || targetSchema == null)
+            {
+                this.btnCustomTransform.SetDisabled();
+            }
+            else
+            {
+                if (this.CustomComponentTransformer != null || this.CustomMetadataTransformer != null)
+                {
+                    this.btnCustomTransform.SetEnabledGreen();
+                }
+                else
+                {
+                    this.btnCustomTransform.SetEnabled();
+                }
+            }
+
             this.chkLocalize.IsEnabled = !sameFolder;
             if (!this.chkLocalize.IsEnabled)
                 this.chkLocalize.IsChecked = false;

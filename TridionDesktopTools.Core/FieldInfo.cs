@@ -8,5 +8,6 @@ namespace TridionDesktopTools.Core
         public bool IsMeta { get; set; }
         public FieldInfo Parent { get; set; }
         public int Level { get; set; }
+        public string RootElementName { get; set; }
     }
 }
