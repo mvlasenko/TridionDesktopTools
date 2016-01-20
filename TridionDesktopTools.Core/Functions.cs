@@ -18,6 +18,7 @@ using System.Xml.Linq;
 using System.Xml.Serialization;
 using System.Xml.XPath;
 using Tridion.ContentManager.CoreService.Client;
+using TridionDesktopTools.Core.Client;
 
 namespace TridionDesktopTools.Core
 {
@@ -29,7 +30,7 @@ namespace TridionDesktopTools.Core
         public static StreamDownloadClient StreamDownloadClient;
         public static StreamUploadClient StreamUploadClient;
         public static BindingType ClientBindingType = BindingType.HttpBinding;
-        public const string ClientVersion = "2013";
+        public const string ClientVersion = "201501";
 
         #endregion
 
@@ -145,7 +146,7 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(host))
                 host = "localhost";
 
-            host = host.GetDomainName();
+            host = host.GetDomainNameAndPort();
 
             var binding = GetBinding();
 
@@ -166,7 +167,7 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(host))
                 host = "localhost";
 
-            host = host.GetDomainName();
+            host = host.GetDomainNameAndPort();
 
             var binding = GetHttpBinding3();
 
@@ -216,7 +217,7 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(host))
                 host = "localhost";
 
-            host = host.GetDomainName();
+            host = host.GetDomainNameAndPort();
 
             var binding = GetHttpBinding2();
 
@@ -248,7 +249,7 @@ namespace TridionDesktopTools.Core
             if (String.IsNullOrEmpty(host))
                 host = "localhost";
 
-            host = host.GetDomainName();
+            host = host.GetDomainNameAndPort();
 
             var binding = GetHttpBinding();
 
@@ -3646,7 +3647,10 @@ namespace TridionDesktopTools.Core
             string tempLocation;
             using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             {
-                tempLocation = StreamUploadClient.UploadBinaryContent(title, fs);
+                AccessTokenData accessToken = new AccessTokenData();
+                accessToken.Title = title;
+                //todo: finish accessToken
+                tempLocation = StreamUploadClient.UploadBinaryContent(accessToken, fs);
             }
             if (String.IsNullOrEmpty(tempLocation))
                 return null;
@@ -6313,6 +6317,30 @@ namespace TridionDesktopTools.Core
             }
             Uri uri = new Uri(url);
             return uri.Host;
+        }
+
+        public static int GetPort(this string url)
+        {
+            if (!url.Contains(Uri.SchemeDelimiter))
+            {
+                url = string.Concat(Uri.UriSchemeHttp, Uri.SchemeDelimiter, url);
+            }
+            Uri uri = new Uri(url);
+            return uri.Port;
+        }
+
+        public static string GetDomainNameAndPort(this string url)
+        {
+            if (!url.Contains(Uri.SchemeDelimiter))
+            {
+                url = string.Concat(Uri.UriSchemeHttp, Uri.SchemeDelimiter, url);
+            }
+            Uri uri = new Uri(url);
+
+            if (uri.Port == 80)
+                return uri.Host;
+
+            return uri.Host + ":" + uri.Port;
         }
 
         public static string GetCurrentVersionTcmId(this string tcmId)

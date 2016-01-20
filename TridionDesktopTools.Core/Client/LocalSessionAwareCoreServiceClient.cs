@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ServiceModel;
+﻿using System.ServiceModel;
 using System.ServiceModel.Channels;
-using System.Text;
 using Tridion.ContentManager.CoreService.Client;
 
-namespace TridionDesktopTools.Core
+namespace TridionDesktopTools.Core.Client
 {
     public class LocalSessionAwareCoreServiceClient : SessionAwareCoreServiceClient, ILocalClient
     {

@@ -1,5 +1,5 @@
 ﻿using Tridion.ContentManager.CoreService.Client;
-using TridionDesktopTools.Core;
+using TridionDesktopTools.Core.Client;
 
 namespace TridionDesktopTools.DocumentCreator
 {

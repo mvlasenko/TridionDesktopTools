@@ -51,18 +51,6 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
-        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
-        "OwnerKey" = "8:_99A491091F0F7C722E641DCEB5ECD6EE"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_8E53A6648FFA4D428AF41FA13C533D91"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -129,8 +117,62 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_B7996AB8148E312F5C15F5A84ABD1437"
-        "OwnerKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
+        "MsmKey" = "8:_AD37A2A8A654C7933FB6FFDC146390B0"
+        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_AD37A2A8A654C7933FB6FFDC146390B0"
+        "OwnerKey" = "8:_99A491091F0F7C722E641DCEB5ECD6EE"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_9F6E6227CC61F17C88230B9698D9A05B"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_DFE6910DC6134658B074729B2CBF53BB"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_C13FBF7DF620459C83A02F0832FB0AAC"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_96D66EB0B63F4C749DF3399249C67F81"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_8E53A6648FFA4D428AF41FA13C533D91"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_5F669570B8804246B9AF6E987EB5CFAA"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
+        "OwnerKey" = "8:_5E8E49CFC6104E4A9D99F6E95FF768D4"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -143,54 +185,6 @@
         {
         "MsmKey" = "8:_DFE6910DC6134658B074729B2CBF53BB"
         "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_5E8E49CFC6104E4A9D99F6E95FF768D4"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_9F6E6227CC61F17C88230B9698D9A05B"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_F7791452985C4887A33AEBC88E1F70AF"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_DFE6910DC6134658B074729B2CBF53BB"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_C13FBF7DF620459C83A02F0832FB0AAC"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_96D66EB0B63F4C749DF3399249C67F81"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_8E53A6648FFA4D428AF41FA13C533D91"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-        "OwnerKey" = "8:_5F669570B8804246B9AF6E987EB5CFAA"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -208,7 +202,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_B7996AB8148E312F5C15F5A84ABD1437"
+        "OwnerKey" = "8:_B281D4DF214E7BBF40F3792841D26FD0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -226,7 +220,7 @@
         "Entry"
         {
         "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_E1FEA3F3E699FE5AAA016636C81F7CD5"
+        "OwnerKey" = "8:_AD37A2A8A654C7933FB6FFDC146390B0"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -251,12 +245,6 @@
         {
         "MsmKey" = "8:_UNDEFINED"
         "OwnerKey" = "8:_8E53A6648FFA4D428AF41FA13C533D91"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_UNDEFINED"
-        "OwnerKey" = "8:_7428963ACC537A4E91CD6F30A648D275"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -432,7 +420,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.IntegrityAnalyzer, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.IntegrityAnalyzer, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_5BFE9C83FCEE44698C24AFE6CDBA7C3E"
@@ -463,7 +451,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.Deleter, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.Deleter, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_5E8E49CFC6104E4A9D99F6E95FF768D4"
@@ -494,7 +482,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentTransformer, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentTransformer, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_5F669570B8804246B9AF6E987EB5CFAA"
@@ -541,42 +529,11 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7428963ACC537A4E91CD6F30A648D275"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_7428963ACC537A4E91CD6F30A648D275"
-                    {
-                    "Name" = "8:DocumentFormat.OpenXml.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:DocumentFormat.OpenXml.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_D1684227CBD549BFBD088246A1D930A0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_8E53A6648FFA4D428AF41FA13C533D91"
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentTransformer.Custom, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentTransformer.Custom, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_8E53A6648FFA4D428AF41FA13C533D91"
@@ -607,7 +564,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentImporter.Custom, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentImporter.Custom, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_96D66EB0B63F4C749DF3399249C67F81"
@@ -669,7 +626,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.Core, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
                     "_9F6E6227CC61F17C88230B9698D9A05B"
@@ -696,20 +653,51 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B7996AB8148E312F5C15F5A84ABD1437"
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_AD37A2A8A654C7933FB6FFDC146390B0"
             {
             "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:Microsoft.IdentityModel, Version=3.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
+            "AssemblyIsInGAC" = "11:FALSE"
+            "AssemblyAsmDisplayName" = "8:DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"
                 "ScatterAssemblies"
                 {
-                    "_B7996AB8148E312F5C15F5A84ABD1437"
+                    "_AD37A2A8A654C7933FB6FFDC146390B0"
                     {
-                    "Name" = "8:Microsoft.IdentityModel.dll"
+                    "Name" = "8:DocumentFormat.OpenXml.DLL"
                     "Attributes" = "3:512"
                     }
                 }
-            "SourcePath" = "8:Microsoft.IdentityModel.dll"
+            "SourcePath" = "8:DocumentFormat.OpenXml.DLL"
+            "TargetName" = "8:"
+            "Tag" = "8:"
+            "Folder" = "8:_D1684227CBD549BFBD088246A1D930A0"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B281D4DF214E7BBF40F3792841D26FD0"
+            {
+            "AssemblyRegister" = "3:1"
+            "AssemblyIsInGAC" = "11:TRUE"
+            "AssemblyAsmDisplayName" = "8:Tridion.ContentManager.CoreService.Client, Version=8.1.0.1287, Culture=neutral, PublicKeyToken=ddfc895746e5ee6b, processorArchitecture=MSIL"
+                "ScatterAssemblies"
+                {
+                    "_B281D4DF214E7BBF40F3792841D26FD0"
+                    {
+                    "Name" = "8:Tridion.ContentManager.CoreService.Client.dll"
+                    "Attributes" = "3:512"
+                    }
+                }
+            "SourcePath" = "8:Tridion.ContentManager.CoreService.Client.dll"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_D1684227CBD549BFBD088246A1D930A0"
@@ -731,7 +719,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentImporter, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.ComponentImporter, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_C13FBF7DF620459C83A02F0832FB0AAC"
@@ -762,7 +750,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.AdvancedSearch, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.AdvancedSearch, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_DFE6910DC6134658B074729B2CBF53BB"
@@ -789,37 +777,6 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_E1FEA3F3E699FE5AAA016636C81F7CD5"
-            {
-            "AssemblyRegister" = "3:1"
-            "AssemblyIsInGAC" = "11:TRUE"
-            "AssemblyAsmDisplayName" = "8:Tridion.ContentManager.CoreService.Client, Version=7.1.0.1290, Culture=neutral, PublicKeyToken=ddfc895746e5ee6b, processorArchitecture=MSIL"
-                "ScatterAssemblies"
-                {
-                    "_E1FEA3F3E699FE5AAA016636C81F7CD5"
-                    {
-                    "Name" = "8:Tridion.ContentManager.CoreService.Client.dll"
-                    "Attributes" = "3:512"
-                    }
-                }
-            "SourcePath" = "8:Tridion.ContentManager.CoreService.Client.dll"
-            "TargetName" = "8:"
-            "Tag" = "8:"
-            "Folder" = "8:_D1684227CBD549BFBD088246A1D930A0"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:TRUE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_E3F48CF46F2448F4BEBCB0868A63A53E"
             {
             "SourcePath" = "8:..\\TridionDesktopTools.DocumentCreator\\schema.docx"
@@ -844,7 +801,7 @@
             {
             "AssemblyRegister" = "3:1"
             "AssemblyIsInGAC" = "11:FALSE"
-            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.DocumentCreator, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86"
+            "AssemblyAsmDisplayName" = "8:TridionDesktopTools.DocumentCreator, Version=4.0.0.0, Culture=neutral, processorArchitecture=x86"
                 "ScatterAssemblies"
                 {
                     "_F7791452985C4887A33AEBC88E1F70AF"
@@ -938,15 +895,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:SDL Tridion Desktop Tools"
-        "ProductCode" = "8:{578FB172-6A1B-44F1-A478-F808CAB230C6}"
-        "PackageCode" = "8:{19A5BA2C-19FC-4AD1-A8B2-63216938A718}"
+        "ProductCode" = "8:{43C72EF9-4187-4E6B-8F34-E48547E38800}"
+        "PackageCode" = "8:{9C6BFB9C-3225-4F47-9039-C7E46E62965D}"
         "UpgradeCode" = "8:{6AAF6F6C-16B5-4DBB-8CBB-4747139750EF}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:FALSE"
-        "ProductVersion" = "8:3.7"
+        "ProductVersion" = "8:4.0"
         "Manufacturer" = "8:Mark Vlasenko"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"

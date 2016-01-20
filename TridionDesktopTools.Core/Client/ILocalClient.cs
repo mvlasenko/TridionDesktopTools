@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ServiceModel;
-using System.Text;
 using System.Xml.Linq;
 using Tridion.ContentManager.CoreService.Client;
 
-namespace TridionDesktopTools.Core
+namespace TridionDesktopTools.Core.Client
 {
     public interface ILocalClient
     {
@@ -142,7 +138,6 @@ namespace TridionDesktopTools.Core
         string EndGetApiVersion(IAsyncResult result);
         string[] EndGetApplicationIds(IAsyncResult result);
         SecurityDescriptorDataDictionary EndGetContentSecurityDescriptorsForOrgItemIds(IAsyncResult result);
-        UserData EndGetCurrentUser(IAsyncResult result);
         IdentifiableObjectData EndGetDefaultData(IAsyncResult result);
         TridionEnumValue[] EndGetEnumValues(IAsyncResult result);
         InstanceData EndGetInstanceData(IAsyncResult result);
@@ -224,7 +219,6 @@ namespace TridionDesktopTools.Core
         string GetApiVersion();
         string[] GetApplicationIds();
         SecurityDescriptorDataDictionary GetContentSecurityDescriptorsForOrgItemIds(string[] organizationalItemIds);
-        UserData GetCurrentUser();
         IdentifiableObjectData GetDefaultData(ItemType itemType, string containerId, ReadOptions readOptions);
         TridionEnumValue[] GetEnumValues(string type);
         InstanceData GetInstanceData(string schemaId, string containerItemId, ReadOptions readOptions);
