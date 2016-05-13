@@ -7,9 +7,8 @@ namespace TridionDesktopTools.Core
 {
     public class ResultInfo : INotifyPropertyChanged
     {
-        private string _TcmId;
+        private ItemInfo _Item;
         private string _Message;
-        private ItemType _ItemType;
         private Status _Status;
         private string _StackTrace;
 
@@ -18,14 +17,22 @@ namespace TridionDesktopTools.Core
             Status = Status.None;
         }
 
-        public string TcmId
+        public ItemInfo Item
         {
-            get { return _TcmId; }
+            get
+            {
+                return _Item;
+            }
             set
             {
-                if (value == _TcmId) return;
-                _TcmId = value;
+                _Item = value;
+                OnPropertyChanged("Item");
                 OnPropertyChanged("TcmId");
+                OnPropertyChanged("ItemType");
+                OnPropertyChanged("Title");
+                OnPropertyChanged("Icon");
+                OnPropertyChanged("Path");
+                OnPropertyChanged("WebDav");
             }
         }
 
@@ -37,17 +44,6 @@ namespace TridionDesktopTools.Core
                 if (value == _Message) return;
                 _Message = value;
                 OnPropertyChanged("Message");
-            }
-        }
-
-        public ItemType ItemType
-        {
-            get { return _ItemType; }
-            set
-            {
-                if (value == _ItemType) return;
-                _ItemType = value;
-                OnPropertyChanged("Icon");
             }
         }
 
@@ -73,28 +69,43 @@ namespace TridionDesktopTools.Core
             }
         }
 
+        public string TcmId
+        {
+            get
+            {
+                if (this.Item == null)
+                    return string.Empty;
+                return this.Item.TcmId;
+            }
+        }
+
+        public ItemType ItemType
+        {
+            get
+            {
+                if (this.Item == null)
+                    return ItemType.None;
+                return this.Item.ItemType;
+            }
+        }
+
+        public string Title
+        {
+            get
+            {
+                if (this.Item == null)
+                    return string.Empty;
+                return this.Item.Title;
+            }
+        }
+
         public Uri Icon
         {
             get
             {
-                if (this.ItemType == ItemType.Publication)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/pub.png");
-                if (this.ItemType == ItemType.Folder)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/fld.png");
-                if (this.ItemType == ItemType.StructureGroup)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/sg.png");
-                if (this.ItemType == ItemType.Schema)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/schema.png");
-                if (this.ItemType == ItemType.PageTemplate)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/pt.png");
-                if (this.ItemType == ItemType.ComponentTemplate)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/ct.png");
-                if (this.ItemType == ItemType.Component)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/cmp.png");
-                if (this.ItemType == ItemType.Page)
-                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/page.png");
-
-                return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/tbb.png");
+                if (this.Item == null)
+                    return null;
+                return this.Item.Icon;
             }
         }
 
@@ -106,10 +117,32 @@ namespace TridionDesktopTools.Core
                     return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/success.png");
                 if (this.Status == Status.Warning)
                     return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/warning.png");
+                if (this.Status == Status.Delete)
+                    return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/delete.png");
                 if (this.Status == Status.Error)
                     return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/error.png");
 
                 return new Uri("pack://application:,,,/TridionDesktopTools.Core;component/Resources/info.png");
+            }
+        }
+
+        public string Path
+        {
+            get
+            {
+                if (this.Item == null)
+                    return string.Empty;
+                return this.Item.Path;
+            }
+        }
+
+        public string WebDav
+        {
+            get
+            {
+                if (this.Item == null)
+                    return this.TcmId;
+                return this.Item.WebDav;
             }
         }
 

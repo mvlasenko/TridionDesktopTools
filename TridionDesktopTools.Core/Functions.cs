@@ -273,310 +273,6 @@ namespace TridionDesktopTools.Core
 
         #region Tridion items access
 
-        //todo: use it for deleter
-        public static bool SavePageTemplate(string title, string xml, string tcmContainer, string fileExtension, out string stackTraceMessage)
-        {
-            stackTraceMessage = "";
-
-            if (ExistsItem(tcmContainer, title))
-            {
-                string id = GetItemTcmId(tcmContainer, title);
-                if (String.IsNullOrEmpty(id))
-                    return false;
-
-                PageTemplateData templateData = ReadItem(id) as PageTemplateData;
-                if (templateData == null)
-                    return false;
-
-                if (templateData.BluePrintInfo.IsShared == true)
-                {
-                    id = GetBluePrintTopTcmId(id);
-
-                    templateData = ReadItem(id) as PageTemplateData;
-                    if (templateData == null)
-                        return false;
-                }
-
-                try
-                {
-                    templateData = Client.CheckOut(id, true, new ReadOptions()) as PageTemplateData;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-                    return false;
-                }
-
-                if (templateData == null)
-                    return false;
-
-                templateData.Content = xml;
-                templateData.Title = title;
-                templateData.LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } };
-                templateData.FileExtension = fileExtension;
-
-                try
-                {
-                    templateData = (PageTemplateData)Client.Update(templateData, new ReadOptions());
-
-                    if (templateData.Content == xml)
-                    {
-                        Client.CheckIn(id, new ReadOptions());
-                        return true;
-                    }
-
-                    Client.UndoCheckOut(id, true, new ReadOptions());
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-
-                    if (templateData == null)
-                        return false;
-
-                    Client.UndoCheckOut(templateData.Id, true, new ReadOptions());
-                    return false;
-                }
-            }
-
-            try
-            {
-                PageTemplateData templateData = new PageTemplateData
-                {
-                    Content = xml,
-                    Title = title,
-                    LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } },
-                    Id = "tcm:0-0-0",
-                    TemplateType = "CompoundTemplate",
-                    FileExtension = fileExtension
-                };
-
-                templateData = (PageTemplateData)Client.Save(templateData, new ReadOptions());
-                Client.CheckIn(templateData.Id, new ReadOptions());
-                return true;
-            }
-            catch (Exception ex)
-            {
-                stackTraceMessage = ex.Message;
-                return false;
-            }
-        }
-
-        //todo: use it for deleter
-        public static bool SaveComponentTemplate(string title, string xml, string tcmContainer, string outputFormat, bool dynamic, out string stackTraceMessage, params string[] allowedSchemaNames)
-        {
-            stackTraceMessage = "";
-
-            List<LinkToSchemaData> schemaList = new List<LinkToSchemaData>();
-
-            string tcmPublication = GetPublicationTcmId(tcmContainer);
-            List<ItemInfo> allSchemas = GetSchemas(tcmPublication);
-
-            if (allowedSchemaNames != null && allowedSchemaNames.Length > 0)
-            {
-                foreach (string schemaName in allowedSchemaNames)
-                {
-                    if (allSchemas.Any(x => x.Title == schemaName))
-                    {
-                        string tcmSchema = allSchemas.First(x => x.Title == schemaName).TcmId;
-                        LinkToSchemaData link = new LinkToSchemaData {IdRef = tcmSchema};
-                        schemaList.Add(link);
-                    }
-                }
-            }
-
-            if (ExistsItem(tcmContainer, title))
-            {
-                string id = GetItemTcmId(tcmContainer, title);
-                if (String.IsNullOrEmpty(id))
-                    return false;
-
-                ComponentTemplateData templateData = ReadItem(id) as ComponentTemplateData;
-                if (templateData == null)
-                    return false;
-
-                if (templateData.BluePrintInfo.IsShared == true)
-                {
-                    id = GetBluePrintTopTcmId(id);
-
-                    templateData = ReadItem(id) as ComponentTemplateData;
-                    if (templateData == null)
-                        return false;
-                }
-
-                try
-                {
-                    templateData = Client.CheckOut(templateData.Id, true, new ReadOptions()) as ComponentTemplateData;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-                    return false;
-                }
-
-                if (templateData == null)
-                    return false;
-
-                templateData.Content = xml;
-                templateData.Title = title;
-                templateData.LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } };
-                templateData.OutputFormat = outputFormat;
-                templateData.RelatedSchemas = schemaList.ToArray();
-
-                try
-                {
-                    templateData = (ComponentTemplateData)Client.Update(templateData, new ReadOptions());
-
-                    if (templateData.Content == xml)
-                    {
-                        Client.CheckIn(templateData.Id, new ReadOptions());
-                        return true;
-                    }
-
-                    Client.UndoCheckOut(templateData.Id, true, new ReadOptions());
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-
-                    if (templateData == null)
-                        return false;
-
-                    Client.UndoCheckOut(templateData.Id, true, new ReadOptions());
-                    return false;
-                }
-            }
-
-            try
-            {
-                ComponentTemplateData templateData = new ComponentTemplateData
-                {
-                    Content = xml,
-                    Title = title,
-                    LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } },
-                    Id = "tcm:0-0-0",
-                    TemplateType = "CompoundTemplate",
-                    OutputFormat = outputFormat,
-                    IsRepositoryPublishable = dynamic,
-                    AllowOnPage = true,
-                    RelatedSchemas = schemaList.ToArray()
-                };
-
-                templateData = (ComponentTemplateData)Client.Save(templateData, new ReadOptions());
-                Client.CheckIn(templateData.Id, new ReadOptions());
-                return true;
-            }
-            catch (Exception ex)
-            {
-                stackTraceMessage = ex.Message;
-                return false;
-            }
-        }
-
-        //todo: use it for deleter
-        public static bool SavePage(string title, string fileName, string tcmContainer, string tcmPageTemplate, Dictionary<string, string> componentPresentations, out string stackTraceMessage)
-        {
-            stackTraceMessage = "";
-
-            tcmPageTemplate = ("start-" + tcmPageTemplate).Replace("start-" + (tcmPageTemplate.Split('-'))[0], (tcmContainer.Split('-'))[0]);
-
-            List<ComponentPresentationData> componentPresentationsList = new List<ComponentPresentationData>();
-            if (componentPresentations != null && componentPresentations.Count > 0)
-            {
-                foreach (string tcmComponent in componentPresentations.Keys)
-                {
-                    string tcmComponentTemplate = componentPresentations[tcmComponent];
-                    ComponentPresentationData item = new ComponentPresentationData
-                    {
-                        Component = new LinkToComponentData { IdRef = tcmComponent },
-                        ComponentTemplate = new LinkToComponentTemplateData { IdRef = tcmComponentTemplate }
-                    };
-                    componentPresentationsList.Add(item);
-                }
-            }
-
-            if (ExistsItem(tcmContainer, title))
-            {
-                string id = GetItemTcmId(tcmContainer, title);
-                if (String.IsNullOrEmpty(id))
-                    return false;
-
-                PageData page = ReadItem(id) as PageData;
-                if (page == null)
-                    return false;
-
-                if (page.BluePrintInfo.IsShared == true)
-                {
-                    id = GetBluePrintTopTcmId(id);
-
-                    page = ReadItem(id) as PageData;
-                    if (page == null)
-                        return false;
-                }
-
-                try
-                {
-                    page = Client.CheckOut(page.Id, true, new ReadOptions()) as PageData;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-                    return false;
-                }
-
-                if (page == null)
-                    return false;
-
-                page.Title = title;
-                page.FileName = fileName;
-                page.LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } };
-                page.PageTemplate = new LinkToPageTemplateData { IdRef = tcmPageTemplate };
-                page.ComponentPresentations = componentPresentationsList.ToArray();
-
-                try
-                {
-                    page = (PageData)Client.Update(page, new ReadOptions());
-                    Client.CheckIn(page.Id, new ReadOptions());
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    stackTraceMessage = ex.Message;
-
-                    if (page == null)
-                        return false;
-
-                    Client.UndoCheckOut(page.Id, true, new ReadOptions());
-                    return false;
-                }
-            }
-
-            try
-            {
-                PageData page = new PageData
-                {
-                    Title = title,
-                    FileName = fileName,
-                    LocationInfo = new LocationInfo { OrganizationalItem = new LinkToOrganizationalItemData { IdRef = tcmContainer } },
-                    Id = "tcm:0-0-0",
-                    IsPageTemplateInherited = false,
-                    PageTemplate = new LinkToPageTemplateData { IdRef = tcmPageTemplate },
-                    ComponentPresentations = componentPresentationsList.ToArray()
-                };
-
-                page = (PageData)Client.Save(page, new ReadOptions());
-                Client.CheckIn(page.Id, new ReadOptions());
-                return true;
-            }
-            catch (Exception ex)
-            {
-                stackTraceMessage = ex.Message;
-                return false;
-            }
-        }
-
         public static string CreateFolder(string title, string tcmContainer)
         {
             try
@@ -590,13 +286,13 @@ namespace TridionDesktopTools.Core
 
                 folderData = Client.Save(folderData, new ReadOptions()) as FolderData;
                 if (folderData == null)
-                    return String.Empty;
+                    return string.Empty;
 
                 return folderData.Id;
             }
             catch (Exception)
             {
-                return String.Empty;
+                return string.Empty;
             }
         }
 
@@ -632,13 +328,13 @@ namespace TridionDesktopTools.Core
 
                 sgData = Client.Save(sgData, new ReadOptions()) as StructureGroupData;
                 if (sgData == null)
-                    return String.Empty;
+                    return string.Empty;
 
                 return sgData.Id;
             }
             catch (Exception)
             {
-                return String.Empty;
+                return string.Empty;
             }
         }
 
@@ -667,16 +363,16 @@ namespace TridionDesktopTools.Core
         public static string GetItemTcmId(string tcmContainer, string itemTitle)
         {
             if (String.IsNullOrEmpty(tcmContainer))
-                return String.Empty;
+                return string.Empty;
 
             OrganizationalItemItemsFilterData filter = new OrganizationalItemItemsFilterData();
-            foreach (XElement element in Client.GetListXml(tcmContainer, filter).Nodes())
+            foreach (XElement element in Client.GetListXml(tcmContainer, filter).Elements())
             {
                 if (element.Attribute("Title").Value == itemTitle)
                     return element.Attribute("ID").Value;
             }
 
-            return String.Empty;
+            return string.Empty;
         }
 
         public static IdentifiableObjectData ReadItem(string id)
@@ -819,9 +515,12 @@ namespace TridionDesktopTools.Core
 
         public static string GetWebDav(this RepositoryLocalObjectData item)
         {
-            string webDav = HttpUtility.UrlDecode(item.LocationInfo.WebDavUrl.Replace("/webdav/", String.Empty));
-            if (String.IsNullOrEmpty(webDav))
-                return String.Empty;
+            if (item.LocationInfo == null || string.IsNullOrEmpty(item.LocationInfo.WebDavUrl))
+                return string.Empty;
+
+            string webDav = HttpUtility.UrlDecode(item.LocationInfo.WebDavUrl.Replace("/webdav/", string.Empty));
+            if (string.IsNullOrEmpty(webDav))
+                return string.Empty;
 
             int dotIndex = webDav.LastIndexOf(".", StringComparison.Ordinal);
             int slashIndex = webDav.LastIndexOf("/", StringComparison.Ordinal);
@@ -831,7 +530,7 @@ namespace TridionDesktopTools.Core
 
         public static List<string> GetWebDavChain(this RepositoryLocalObjectData item)
         {
-            List<string> res = item.LocationInfo.WebDavUrl.Replace("/webdav/", String.Empty).Split('/').Select(HttpUtility.UrlDecode).ToList();
+            List<string> res = item.LocationInfo.WebDavUrl.Replace("/webdav/", string.Empty).Split('/').Select(HttpUtility.UrlDecode).ToList();
 
             if (res.Last().Contains("."))
                 res[res.Count - 1] = res.Last().Substring(0, res.Last().LastIndexOf(".", StringComparison.Ordinal));
@@ -844,7 +543,7 @@ namespace TridionDesktopTools.Core
             if (input == null || toSubstract == null)
                 return input;
 
-            return String.Join("|||", input).Replace(String.Join("|||", toSubstract), String.Empty).Split(new [] { "|||" }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            return String.Join("|||", input).Replace(String.Join("|||", toSubstract), string.Empty).Split(new [] { "|||" }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
         public static List<string> GetUsingItems(string tcmItem, bool current = false, ItemType[] itemTypes = null)
@@ -936,7 +635,7 @@ namespace TridionDesktopTools.Core
         {
             RepositoryLocalObjectData item = Client.Read(tcmItem, new ReadOptions()) as RepositoryLocalObjectData;
             if (item == null)
-                return String.Empty;
+                return string.Empty;
 
             return item.LocationInfo.OrganizationalItem.IdRef;
         }
@@ -1349,7 +1048,7 @@ namespace TridionDesktopTools.Core
             List<List<ItemInfo>> res = new List<List<ItemInfo>>();
 
             List<Criteria> textCriterias = criterias.Where(x => (x.Field.IsText() || x.Field.IsRichText() || x.Field.IsTextSelect() || x.Field.IsKeyword() || x.Field.IsEmbedded()) && (x.Operation == Operation.Equal || x.Operation == Operation.Like)).ToList();
-            List<ItemInfo> resText = GetComponentsByTextCriterias(tcmFolder, String.Empty, tcmSchema, textCriterias);
+            List<ItemInfo> resText = GetComponentsByTextCriterias(tcmFolder, string.Empty, tcmSchema, textCriterias);
             res.Add(resText);
 
             List<Criteria> deteNumCriterias = criterias.Where(x => (x.Field.IsDate() || x.Field.IsNumber()) && (x.Operation == Operation.Equal || x.Operation == Operation.Greater || x.Operation == Operation.Less)).ToList();
@@ -1381,7 +1080,7 @@ namespace TridionDesktopTools.Core
 
             SchemaData schema = Client.Read(schemaUri, null) as SchemaData;
             if (schema == null)
-                return String.Empty;
+                return string.Empty;
 
             if (component.VersionInfo.RevisionDate > schema.VersionInfo.RevisionDate)
                 return schemaUri;
@@ -1392,7 +1091,7 @@ namespace TridionDesktopTools.Core
             HistoryItemInfo historyItem = schemaHistory.FirstOrDefault(x => x.Modified < component.VersionInfo.RevisionDate);
 
             if (historyItem == null)
-                return String.Empty;
+                return string.Empty;
 
             return historyItem.TcmId;
         }
@@ -1404,7 +1103,7 @@ namespace TridionDesktopTools.Core
 
             SchemaData metadataSchema = Client.Read(metadataSchemaUri, null) as SchemaData;
             if (metadataSchema == null)
-                return String.Empty;
+                return string.Empty;
 
             if (tridionObject.VersionInfo.RevisionDate > metadataSchema.VersionInfo.RevisionDate)
                 return metadataSchemaUri;
@@ -1415,7 +1114,7 @@ namespace TridionDesktopTools.Core
             HistoryItemInfo historyItem = metadataSchemaHistory.FirstOrDefault(x => x.Modified < tridionObject.VersionInfo.RevisionDate);
 
             if (historyItem == null)
-                return String.Empty;
+                return string.Empty;
 
             return historyItem.TcmId;
         }
@@ -1560,7 +1259,7 @@ namespace TridionDesktopTools.Core
             List<FieldInfo> res = new List<FieldInfo>();
             foreach (FieldInfo field in list)
             {
-                if (field.Field.IsComponentLink())
+                if (field.Field.IsComponentLink() && ((ComponentLinkFieldDefinitionData)field.Field).AllowedTargetSchemas.Any())
                 {
                     string childSchemaId = ((ComponentLinkFieldDefinitionData)field.Field).AllowedTargetSchemas[0].IdRef;
                     SchemaData childSchema = Client.Read(childSchemaId, null) as SchemaData;
@@ -1574,8 +1273,8 @@ namespace TridionDesktopTools.Core
 
                 if (field.Level < 3 && (field.Field.IsEmbedded() || field.Field.IsComponentLink() && !field.Field.IsMultimediaComponentLink() && ((ComponentLinkFieldDefinitionData)field.Field).AllowedTargetSchemas.Any()))
                 {
-                    string childSchemaId = field.Field.IsEmbedded() ? 
-                        ((EmbeddedSchemaFieldDefinitionData) field.Field).EmbeddedSchema.IdRef : 
+                    string childSchemaId = field.Field.IsEmbedded() ?
+                        ((EmbeddedSchemaFieldDefinitionData) field.Field).EmbeddedSchema.IdRef :
                         ((ComponentLinkFieldDefinitionData) field.Field).AllowedTargetSchemas[0].IdRef;
 
                     var schemaFields = GetSchemaFields(childSchemaId);
@@ -1783,7 +1482,7 @@ namespace TridionDesktopTools.Core
 
             if (!mapping.Equals && childFieldMapping != null && childFieldMapping.Count > 0)
             {
-                XNamespace ns = String.Empty;
+                XNamespace ns = string.Empty;
                 value = new XElement(ns + mapping.TargetField.Field.Name);
 
                 foreach (FieldMappingInfo childMapping in childFieldMapping)
@@ -1830,7 +1529,7 @@ namespace TridionDesktopTools.Core
                 
                 for (int i = 0; i < maxCount; i++)
                 {
-                    XNamespace ns = String.Empty;
+                    XNamespace ns = string.Empty;
                     XElement value = new XElement(ns + mapping.TargetField.Field.Name);
                     values.Add(value);
                 }
@@ -1863,7 +1562,7 @@ namespace TridionDesktopTools.Core
             {
                 XElement defaultValue = mapping.GetDefaultXmlValue(sourceNs);
 
-                if (root == null || mapping.SourceFieldFullName == "< new >")
+                if (mapping.SourceFieldFullName == "< new >")
                 {
                     values = defaultValue != null ? new List<XElement> { defaultValue } : new List<XElement>();
                 }
@@ -1915,7 +1614,7 @@ namespace TridionDesktopTools.Core
 
             string title = String.Format("[{0:00}0] {1}", index, sourceComponent.Title);
 
-            ResultInfo result = SaveComponent(targetSchema, title, newXml, String.Empty, targetFolderUri, false);
+            ResultInfo result = SaveComponent(targetSchema, title, newXml, string.Empty, targetFolderUri, false);
             if (result == null)
                 return null;
 
@@ -2031,7 +1730,7 @@ namespace TridionDesktopTools.Core
         {
             XElement x = XElement.Parse(string.Format("<{0}>{1}</{0}>", rootName, HttpUtility.HtmlDecode(html)));
 
-            XNamespace ns = String.Empty;
+            XNamespace ns = string.Empty;
             XElement res = new XElement(ns + rootName);
 
             XNamespace nsXhtml = "http://www.w3.org/1999/xhtml";
@@ -2209,13 +1908,11 @@ namespace TridionDesktopTools.Core
         private static string GetFixedContent(string sourceXml, XNamespace sourceNs, string sourceTcmId, SchemaData targetSchema, string targetRootElementName, List<ItemFieldDefinitionData> targetFields, string targetFolderUri, List<FieldMappingInfo> fieldMapping, List<ResultInfo> results)
         {
             if (targetFields == null || targetFields.Count == 0)
-                return String.Empty;
+                return string.Empty;
 
             if (results == null)
                 results = new List<ResultInfo>();
             
-            ItemType itemType = GetItemType(sourceTcmId);
-
             if (String.IsNullOrEmpty(targetRootElementName))
                 targetRootElementName = targetSchema.RootElementName;
 
@@ -2240,12 +1937,12 @@ namespace TridionDesktopTools.Core
                     {
                         success = false;
 
+                        RepositoryLocalObjectData itemData = ReadItem(sourceTcmId) as RepositoryLocalObjectData;
+
                         ResultInfo result = new ResultInfo();
-                        result.ItemType = itemType;
-                        result.TcmId = sourceTcmId;
+                        result.Item = itemData.ToItem();
                         result.Status = Status.Error;
-                        RepositoryLocalObjectData item = ReadItem(sourceTcmId) as RepositoryLocalObjectData;
-                        result.Message = String.Format("Item \"{0}\" contains mandatory empty fields. Please change mapping.", item == null ? sourceTcmId : item.GetWebDav().CutPath("/", 90, true));
+                        result.Message = String.Format("Item \"{0}\" contains mandatory empty fields. Please change mapping.", itemData == null ? sourceTcmId : itemData.GetWebDav().CutPath("/", 90, true));
                         results.Add(result);
                     }
                 }
@@ -2266,12 +1963,12 @@ namespace TridionDesktopTools.Core
                 }
                 else
                 {
+                    RepositoryLocalObjectData itemData = ReadItem(id) as RepositoryLocalObjectData;
+
                     ResultInfo result = new ResultInfo();
-                    result.ItemType = ItemType.Component;
-                    result.TcmId = id;
+                    result.Item = itemData.ToItem();
                     result.Status = Status.Error;
-                    RepositoryLocalObjectData item = ReadItem(id) as RepositoryLocalObjectData;
-                    result.Message = String.Format("Item \"{0}\" doesn't exist in target publication", item == null ? id : item.GetWebDav().CutPath("/", 90, true));
+                    result.Message = String.Format("Item \"{0}\" doesn't exist in target publication", itemData == null ? id : itemData.GetWebDav().CutPath("/", 90, true));
                     results.Add(result);
 
                     throw new Exception(result.Message);
@@ -2280,8 +1977,8 @@ namespace TridionDesktopTools.Core
 
             //clear unnecessary namespaces
             res = res.Replace(String.Format("xmlns=\"{0}\"", sourceNs), String.Format("xmlns=\"{0}\"", targetSchema.NamespaceUri));
-            res = res.Replace(" xmlns=\"\"", String.Empty);
-            res = res.Replace(String.Format(" xmlns=\"{0}\"", targetSchema.NamespaceUri), String.Empty);
+            res = res.Replace(" xmlns=\"\"", string.Empty);
+            res = res.Replace(String.Format(" xmlns=\"{0}\"", targetSchema.NamespaceUri), string.Empty);
             res = res.Replace(String.Format("<{0}", targetRootElementName), String.Format("<{0} xmlns=\"{1}\"", targetRootElementName, targetSchema.NamespaceUri));
             
             return res;
@@ -2290,15 +1987,13 @@ namespace TridionDesktopTools.Core
         private static string GetFixedContent(string sourceXml, string sourceMetadataXml, SchemaData sourceSchema, List<ItemFieldDefinitionData> sourceComponentFields, List<ItemFieldDefinitionData> sourceMetadataFields, string sourceTcmId, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, string targetFolderUri, CustomTransformerInfo customTransformer, List<ResultInfo> results)
         {
             if (targetComponentFields == null || targetComponentFields.Count == 0)
-                return String.Empty;
+                return string.Empty;
 
             if (customTransformer == null)
-                return String.Empty;
+                return string.Empty;
 
             if(results == null)
                 results = new List<ResultInfo>();
-
-            ItemType itemType = GetItemType(sourceTcmId);
 
             try
             {
@@ -2311,23 +2006,23 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
+                RepositoryLocalObjectData itemData = GetComponent(sourceTcmId);
+
                 ResultInfo result = new ResultInfo();
-                result.ItemType = itemType;
-                result.TcmId = sourceTcmId;
+                result.Item = itemData.ToItem();
                 result.Status = Status.Error;
-                RepositoryLocalObjectData item = GetComponent(sourceTcmId);
-                result.Message = String.Format("Item \"{0}\" contains broken data.", item == null ? sourceTcmId : item.GetWebDav().CutPath("/", 90, true));
+                result.Message = String.Format("Item \"{0}\" contains broken data.", itemData == null ? sourceTcmId : itemData.GetWebDav().CutPath("/", 90, true));
                 result.StackTrace = ex.StackTrace;
                 results.Add(result);
             }
 
-            return String.Empty;
+            return string.Empty;
         }
 
         private static string GetFixedContent(string sourceTable, DataRow sourceDataRow, SchemaData targetSchema, string targetRootElementName, List<ItemFieldDefinitionData> targetFields, List<FieldMappingInfo> fieldMapping, List<ResultInfo> results)
         {
             if (targetFields == null || targetFields.Count == 0)
-                return String.Empty;
+                return string.Empty;
 
             if (results == null)
                 results = new List<ResultInfo>();
@@ -2357,8 +2052,8 @@ namespace TridionDesktopTools.Core
                         success = false;
 
                         ResultInfo result = new ResultInfo();
-                        result.ItemType = ItemType.Component;
                         result.Status = Status.Error;
+                        result.Item = new ItemInfo { ItemType = ItemType.Component };
                         result.Message = String.Format("Table \"{0}\" contains mandatory empty field \"{1}\". Please change mapping.", sourceTable, schemaField.Name);
                         results.Add(result);
                     }
@@ -2370,8 +2065,8 @@ namespace TridionDesktopTools.Core
             string res = GetComponentXml(targetSchema.NamespaceUri, targetRootElementName, fixedValues).ToString();
 
             //clear unnecessary namespaces
-            res = res.Replace(" xmlns=\"\"", String.Empty);
-            res = res.Replace(String.Format(" xmlns=\"{0}\"", targetSchema.NamespaceUri), String.Empty);
+            res = res.Replace(" xmlns=\"\"", string.Empty);
+            res = res.Replace(String.Format(" xmlns=\"{0}\"", targetSchema.NamespaceUri), string.Empty);
             res = res.Replace(String.Format("<{0}", targetRootElementName), String.Format("<{0} xmlns=\"{1}\"", targetRootElementName, targetSchema.NamespaceUri));
 
             return res;
@@ -2380,10 +2075,10 @@ namespace TridionDesktopTools.Core
         private static string GetFixedContent(string sourceTable, DataRow sourceDataRow, SchemaData targetSchema, List<ItemFieldDefinitionData> targetComponentFields, List<ItemFieldDefinitionData> targetMetadataFields, string targetFolderUri, CustomTransformerInfo customImporter, List<ResultInfo> results)
         {
             if (targetComponentFields == null || targetComponentFields.Count == 0)
-                return String.Empty;
+                return string.Empty;
 
             if (customImporter == null)
-                return String.Empty;
+                return string.Empty;
 
             if (results == null)
                 results = new List<ResultInfo>();
@@ -2400,24 +2095,22 @@ namespace TridionDesktopTools.Core
             catch (Exception ex)
             {
                 ResultInfo result = new ResultInfo();
-                result.ItemType = ItemType.Component;
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = ItemType.Component };
                 result.Message = String.Format("Table \"{0}\" contains wrong data.", sourceTable);
                 result.StackTrace = ex.StackTrace;
                 results.Add(result);
             }
 
-            return String.Empty;
+            return string.Empty;
         }
 
         private static ResultInfo SaveComponent(SchemaData schema, string title, string contentXml, string metadataXml, string folderUri, bool localize)
         {
             ResultInfo result = new ResultInfo();
-            result.ItemType = ItemType.Component;
 
             if (String.IsNullOrEmpty(title))
             {
-                result.TcmId = folderUri;
                 result.Status = Status.Error;
                 result.Message = "Component title is not defined";
             }
@@ -2446,14 +2139,14 @@ namespace TridionDesktopTools.Core
                     string componentUri = Client.CheckIn(component.Id, new ReadOptions()).Id;
                     component = GetComponent(componentUri);
 
-                    result.TcmId = component.Id;
+                    result.Item = component.ToItem();
                     result.Status = Status.Success;
                     result.Message = String.Format("Component \"{0}\" was created", component.GetWebDav().CutPath("/", 80, true));
                 }
                 catch (Exception ex)
                 {
-                    result.TcmId = folderUri;
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component };
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Error creating component \"{0}\"", title);
                 }
@@ -2472,19 +2165,19 @@ namespace TridionDesktopTools.Core
                         return null;
 
                     //localize if item is shared
-                    if (IsShared(componentUri))
+                    if (component.BluePrintInfo.IsShared == true)
                     {
                         if (localize)
                         {
-                            Localize(componentUri);
+                            Localize(component.ToItem());
                         }
                         else
                         {
-                            componentUri = GetBluePrintTopLocalizedTcmId(componentUri);
+                            componentUri = GetBluePrintTopTcmId(componentUri);
                         }
                     }
 
-                    result.TcmId = componentUri;
+                    result.Item = component.ToItem();
 
                     try
                     {
@@ -2510,14 +2203,15 @@ namespace TridionDesktopTools.Core
                         Client.UndoCheckOut(componentUri, true, new ReadOptions());
 
                         result.Status = Status.Error;
+                        result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = componentUri };
                         result.StackTrace = ex.StackTrace;
                         result.Message = String.Format("Error updating component \"{0}\"", component.GetWebDav().CutPath("/", 80, true));
                     }
                 }
                 else
                 {
-                    result.TcmId = folderUri;
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = componentUri };
                     result.Message = String.Format("Error updating component \"{0}\"", title);
                 }
             }
@@ -2536,9 +2230,9 @@ namespace TridionDesktopTools.Core
             string tridionObjectUri = targetContainerItems.First(x => x.Title == title).TcmId;
 
             ResultInfo result = new ResultInfo();
-            result.ItemType = GetItemType(tridionObjectUri);
 
             RepositoryLocalObjectData tridionObject = ReadItem(tridionObjectUri) as RepositoryLocalObjectData;
+            result.Item = tridionObject.ToItem();
 
             //only tridionObject of same name and title
             if (tridionObject != null && tridionObject.MetadataSchema.IdRef.GetId() == metadataSchema.Id.GetId())
@@ -2547,19 +2241,17 @@ namespace TridionDesktopTools.Core
                     return null;
 
                 //localize if item is shared
-                if (IsShared(tridionObjectUri))
+                if (tridionObject.BluePrintInfo.IsShared == true)
                 {
                     if (localize)
                     {
-                        Localize(tridionObjectUri);
+                        Localize(tridionObject.ToItem());
                     }
                     else
                     {
-                        tridionObjectUri = GetBluePrintTopLocalizedTcmId(tridionObjectUri);
+                        tridionObjectUri = GetBluePrintTopTcmId(tridionObjectUri);
                     }
                 }
-
-                result.TcmId = tridionObjectUri;
 
                 try
                 {
@@ -2584,14 +2276,15 @@ namespace TridionDesktopTools.Core
                     Client.UndoCheckOut(tridionObjectUri, true, new ReadOptions());
 
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = GetItemType(tridionObjectUri), TcmId = tridionObjectUri };
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Error updating item \"{0}\"", tridionObject.GetWebDav().CutPath("/", 80, true));
                 }
             }
             else
             {
-                result.TcmId = containerUri;
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = GetItemType(tridionObjectUri), TcmId = tridionObjectUri };
                 result.Message = String.Format("Error updating page \"{0}\"", title);
             }
 
@@ -2652,7 +2345,7 @@ namespace TridionDesktopTools.Core
             List<FieldMappingInfo> fieldMapping = GetDetectedMapping(historyMapping, component.VersionInfo.RevisionDate);
 
             ResultInfo result = new ResultInfo();
-            result.ItemType = ItemType.Component;
+            result.Item = component.ToItem();
 
             //get fixed xml
             string newContent = customComponentTransformer == null ?
@@ -2668,23 +2361,21 @@ namespace TridionDesktopTools.Core
                 return;
 
             //localize if item is shared
-            if (IsShared(componentUri))
+            if (component.BluePrintInfo.IsShared == true)
             {
                 if (localize)
                 {
-                    Localize(componentUri);
+                    Localize(component.ToItem());
                 }
                 else
                 {
-                    componentUri = GetBluePrintTopLocalizedTcmId(componentUri);
+                    componentUri = GetBluePrintTopTcmId(componentUri);
                 }
             }
 
-            result.TcmId = componentUri;
-
             component = Client.TryCheckOut(componentUri, new ReadOptions()) as ComponentData;
 
-            if (component.IsEditable.Value)
+            if (component != null && component.IsEditable == true)
             {
                 try
                 {
@@ -2708,6 +2399,7 @@ namespace TridionDesktopTools.Core
                     Client.UndoCheckOut(componentUri, true, new ReadOptions());
 
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo {ItemType = ItemType.Component, TcmId = componentUri};
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Error for \"{0}\"", component.GetWebDav().CutPath("/", 90, true));
                 }
@@ -2717,6 +2409,7 @@ namespace TridionDesktopTools.Core
                 Client.UndoCheckOut(componentUri, true, new ReadOptions());
 
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = componentUri };
                 result.Message = String.Format("Error for \"{0}\"", component.GetWebDav().CutPath("/", 90, true));
             }
 
@@ -2942,7 +2635,7 @@ namespace TridionDesktopTools.Core
                 }
 
                 string newSourceContent = GetComponentXml(sourceSchema.NamespaceUri, sourceSchema.RootElementName, sourceValues).ToString();
-                newSourceContent = newSourceContent.Replace(" xmlns=\"\"", String.Empty);
+                newSourceContent = newSourceContent.Replace(" xmlns=\"\"", string.Empty);
 
                 ComponentFieldData metadataValue = metadataValues.FirstOrDefault(x => x.SchemaField.Name == targetComponentLink.Name && x.SchemaField.GetFieldType() == targetComponentLink.GetFieldType());
                 if (metadataValue == null && targetComponentLinkMapping.SourceField.IsMeta)
@@ -2958,7 +2651,7 @@ namespace TridionDesktopTools.Core
                 if (newXmlSourceMetadata != null)
                 {
                     newSourceMetadata = newXmlSourceMetadata.ToString();
-                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", String.Empty);
+                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", string.Empty);
                 }
                 if (newSourceMetadata == string.Empty && sourceMetadataFields != null && sourceMetadataFields.Count > 0)
                 {
@@ -3052,7 +2745,7 @@ namespace TridionDesktopTools.Core
             List<FieldMappingInfo> fieldMapping = GetDetectedMapping(historyMapping, tridionObject.VersionInfo.RevisionDate);
 
             ResultInfo result = new ResultInfo();
-            result.ItemType = GetItemType(sourceTridionObjectUri);
+            result.Item = tridionObject.ToItem();
 
             //get fixed metadata
             string newMetadata = customMetadataTransformer == null ?
@@ -3063,23 +2756,21 @@ namespace TridionDesktopTools.Core
                 return;
 
             //localize if item is shared
-            if (IsShared(sourceTridionObjectUri))
+            if (tridionObject.BluePrintInfo.IsShared == true)
             {
                 if (localize)
                 {
-                    Localize(sourceTridionObjectUri);
+                    Localize(tridionObject.ToItem());
                 }
                 else
                 {
-                    sourceTridionObjectUri = GetBluePrintTopLocalizedTcmId(sourceTridionObjectUri);
+                    sourceTridionObjectUri = GetBluePrintTopTcmId(sourceTridionObjectUri);
                 }
             }
 
-            result.TcmId = sourceTridionObjectUri;
-
             tridionObject = Client.TryCheckOut(sourceTridionObjectUri, new ReadOptions()) as RepositoryLocalObjectData;
 
-            if (tridionObject.IsEditable.Value)
+            if (tridionObject != null && tridionObject.IsEditable == true)
             {
                 try
                 {
@@ -3100,6 +2791,7 @@ namespace TridionDesktopTools.Core
                     Client.UndoCheckOut(sourceTridionObjectUri, true, new ReadOptions());
 
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = GetItemType(sourceTridionObjectUri), TcmId = sourceTridionObjectUri };
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Error for \"{0}\"", tridionObject.GetWebDav().CutPath("/", 90, true));
                 }
@@ -3109,6 +2801,7 @@ namespace TridionDesktopTools.Core
                 Client.UndoCheckOut(sourceTridionObjectUri, true, new ReadOptions());
 
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = GetItemType(sourceTridionObjectUri), TcmId = sourceTridionObjectUri };
                 result.Message = String.Format("Error for \"{0}\"", tridionObject.GetWebDav().CutPath("/", 90, true));
             }
 
@@ -3318,7 +3011,7 @@ namespace TridionDesktopTools.Core
                 if (newXmlSourceMetadata != null)
                 {
                     newSourceMetadata = newXmlSourceMetadata.ToString();
-                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", String.Empty);
+                    newSourceMetadata = newSourceMetadata.Replace(" xmlns=\"\"", string.Empty);
                 }
                 if (newSourceMetadata == string.Empty && sourceMetadataFields != null && sourceMetadataFields.Count > 0)
                 {
@@ -3385,10 +3078,9 @@ namespace TridionDesktopTools.Core
             }
 
             ResultInfo result = new ResultInfo();
-            result.ItemType = ItemType.Folder;
-            result.TcmId = folderUri;
+            result.Item = innerFolder.ToItem();
 
-            if (innerFolder.IsEditable.Value)
+            if (innerFolder.IsEditable == true)
             {
                 try
                 {
@@ -3406,6 +3098,7 @@ namespace TridionDesktopTools.Core
                 catch (Exception ex)
                 {
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Folder, TcmId = folderUri };
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Error for folder \"{0}\"", innerFolder.GetWebDav().CutPath("/", 80, true));
                 }
@@ -3413,65 +3106,11 @@ namespace TridionDesktopTools.Core
             else
             {
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = ItemType.Folder, TcmId = folderUri };
                 result.Message = String.Format("Error for folder \"{0}\"", innerFolder.GetWebDav().CutPath("/", 80, true));
             }
 
             results.Add(result);
-        }
-
-        private static void RemoveFolderLinkedSchema(string folderUri)
-        {
-            FolderData innerFolder = Client.Read(folderUri, new ReadOptions()) as FolderData;
-
-            if (innerFolder == null)
-                return;
-
-            if (innerFolder.LinkedSchema == null)
-                return;
-
-            if (innerFolder.IsEditable.Value)
-            {
-                try
-                {
-                    //change schema id
-                    innerFolder.LinkedSchema.IdRef = "tcm:0-0-0";
-
-                    //make non-mandatory to aviod conflicts with inner components
-                    innerFolder.IsLinkedSchemaMandatory = false;
-
-                    Client.Save(innerFolder, new ReadOptions());
-                }
-                catch (Exception)
-                {
-
-                }
-            }
-        }
-
-        private static void RemoveMetadataSchema(string itemUri)
-        {
-            RepositoryLocalObjectData item = Client.Read(itemUri, new ReadOptions()) as RepositoryLocalObjectData;
-
-            if (item == null)
-                return;
-
-            if (item.MetadataSchema == null)
-                return;
-
-            if (item.IsEditable.Value)
-            {
-                try
-                {
-                    //change schema id
-                    item.MetadataSchema.IdRef = "tcm:0-0-0";
-
-                    Client.Save(item, new ReadOptions());
-                }
-                catch (Exception)
-                {
-
-                }
-            }
         }
 
         public static List<CustomTransformerInfo> GetCustomTransformers(string sourceSchemaTitle, SchemaType sourceSchemaType, ItemType sourceObjectType, string targetSchemaTitle, SchemaType targetSchemaType)
@@ -3663,7 +3302,6 @@ namespace TridionDesktopTools.Core
         public static ResultInfo SaveMultimediaComponentFromBinary(string filePath, string title, string metadata, string tcmContainer, string multimediaSchemaTitle)
         {
             ResultInfo result = new ResultInfo();
-            result.ItemType = ItemType.Component;
 
             if (!File.Exists(filePath))
             {
@@ -3684,12 +3322,11 @@ namespace TridionDesktopTools.Core
                 if (String.IsNullOrEmpty(id))
                     id = GetItemTcmId(tcmContainer, Path.GetFileName(filePath));
 
-                result.TcmId = id;
-
                 ComponentData multimediaComponent = ReadItem(id) as ComponentData;
                 if (multimediaComponent == null)
                 {
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                     result.Message = String.Format("Multimedia component \"{0}\" not found.", id);
                     return result;
                 }
@@ -3698,6 +3335,7 @@ namespace TridionDesktopTools.Core
                 if (binaryContent == null)
                 {
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                     result.Message = String.Format("File {0} does not exist", filePath);
                     return result;
                 }
@@ -3717,6 +3355,7 @@ namespace TridionDesktopTools.Core
                     if (multimediaComponent == null)
                     {
                         result.Status = Status.Error;
+                        result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                         result.Message = String.Format("Multimedia component \"{0}\" not found.", id);
                         return result;
                     }
@@ -3729,6 +3368,7 @@ namespace TridionDesktopTools.Core
                 catch (Exception ex)
                 {
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                     result.StackTrace = ex.StackTrace;
                     result.Message = String.Format("Multimedia component \"{0}\" is checked out.", id);
                     return result;
@@ -3737,6 +3377,7 @@ namespace TridionDesktopTools.Core
                 if (multimediaComponent == null)
                 {
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                     result.Message = String.Format("Multimedia component \"{0}\" not found.", id);
                     return result;
                 }
@@ -3750,7 +3391,7 @@ namespace TridionDesktopTools.Core
                     multimediaComponent = (ComponentData)Client.Update(multimediaComponent, new ReadOptions());
                     Client.CheckIn(id, new ReadOptions());
 
-                    result.TcmId = id;
+                    result.Item = multimediaComponent.ToItem();
                     result.Status = Status.Success;
                     result.Message = String.Format("Multimedia component {0} was updated", title);
 
@@ -3761,6 +3402,7 @@ namespace TridionDesktopTools.Core
                     Client.UndoCheckOut(multimediaComponent.Id, true, new ReadOptions());
 
                     result.Status = Status.Error;
+                    result.Item = new ItemInfo { ItemType = ItemType.Component, TcmId = id };
                     result.Message = String.Format("Error creating multimedia component {0}", title);
                     result.StackTrace = ex.Message;
 
@@ -3806,13 +3448,14 @@ namespace TridionDesktopTools.Core
                 string componentUri = Client.CheckIn(multimediaComponent.Id, new ReadOptions()).Id;
                 multimediaComponent = GetComponent(componentUri);
 
-                result.TcmId = multimediaComponent.Id;
+                result.Item = multimediaComponent.ToItem();
                 result.Status = Status.Success;
                 result.Message = String.Format("Multimedia component \"{0}\" was created", multimediaComponent.GetWebDav().CutPath("/", 80, true));
             }
             catch (Exception ex)
             {
                 result.Status = Status.Error;
+                result.Item = new ItemInfo { ItemType = ItemType.Component };
                 result.StackTrace = ex.StackTrace;
                 result.Message = String.Format("Error creating multimedia component \"{0}\"", title);
             }
@@ -4081,8 +3724,13 @@ namespace TridionDesktopTools.Core
                         schemaField.IsMultiValue() && (componentFieldDataValue == null || componentFieldDataValue.Value == null || !((IEnumerable<object>)componentFieldDataValue.Value).Any()))
                     {
                         ResultInfo result = new ResultInfo();
-                        result.ItemType = GetItemType(item.Id);
-                        result.TcmId = item.Id;
+
+                        if (item is RepositoryLocalObjectData)
+                            result.Item = ((RepositoryLocalObjectData)item).ToItem();
+
+                        if (item is PublicationData)
+                            result.Item = ((PublicationData)item).ToItem();
+
                         result.Status = Status.Error;
                         result.Message = String.Format("Element \"{0}\" contains mandatory empty fields", item is RepositoryLocalObjectData ? ((RepositoryLocalObjectData)item).GetWebDav().CutPath("/", 90, true) : item.Title);
                         results.Add(result);
@@ -4149,7 +3797,7 @@ namespace TridionDesktopTools.Core
             {
                 DeletePublication(tcmItem, delete, results);
             }
-            else if (itemType == ItemType.Folder || itemType == ItemType.StructureGroup)
+            else if (itemType == ItemType.Folder || itemType == ItemType.StructureGroup || itemType == ItemType.Category)
             {
                 DeleteFolderOrStructureGroup(tcmItem, delete, results);
             }
@@ -4161,108 +3809,225 @@ namespace TridionDesktopTools.Core
 
         private static LinkStatus RemoveDependency(string tcmItem, string tcmDependentItem, bool delete, List<ResultInfo> results)
         {
+            if (results.Any(x => x.Status == Status.Error))
+                return LinkStatus.Error;
+
+            if (results.Count > 50)
+            {
+                results.Insert(0, new ResultInfo
+                {
+                    Message = "Delete stack exceeds 50 items. Please select other item",
+                    Item = new ItemInfo { Title = "Delete stack exceeds 50 items" },
+                    Status = Status.Error
+                });
+
+                return LinkStatus.Error;
+            }
+
+            ResultInfo result = new ResultInfo();
+
             ItemType itemType = GetItemType(tcmItem);
             ItemType dependentItemType = GetItemType(tcmDependentItem);
             LinkStatus status = LinkStatus.NotFound;
             string stackTraceMessage = "";
 
+            RepositoryLocalObjectData dependentItemData = ReadItem(tcmDependentItem) as RepositoryLocalObjectData;
+
+            //publication properies are not handled
+            if (itemType == ItemType.Publication)
+            {
+                PublicationData publicationData = (PublicationData)ReadItem(tcmItem);
+                result.Item = publicationData.ToItem();
+
+                result.Status = Status.Error;
+                result.Message = string.Format("Not able to unlink \"{1}\" from publication \"{0}\".", publicationData.Title, dependentItemData == null ? tcmDependentItem : dependentItemData.GetWebDav());
+                results.Add(result);
+
+                return LinkStatus.Error;
+            }
+
+            RepositoryLocalObjectData itemData = ReadItem(tcmItem) as RepositoryLocalObjectData;
+            if (itemData == null)
+                return LinkStatus.NotFound;
+
+            if (itemData.BluePrintInfo.IsShared == true)
+            {
+                tcmItem = GetBluePrintTopTcmId(tcmItem);
+
+                itemData = ReadItem(tcmItem) as RepositoryLocalObjectData;
+                if (itemData == null)
+                    return LinkStatus.NotFound;
+            }
+            
+            result.Item = itemData.ToItem();
+
             if (delete)
             {
+                //remove linked schema
+                if (itemType == ItemType.Folder && dependentItemType == ItemType.Schema)
+                {
+                    status = RemoveFolderLinkedSchema(tcmItem, out stackTraceMessage);
+                }
+
+                //remove metadata schema
+                if (dependentItemType == ItemType.Schema)
+                {
+                    status = RemoveMetadataSchema(tcmItem, tcmDependentItem, out stackTraceMessage);
+                }
+
+                //remove parameters schema
+                if (dependentItemType == ItemType.Schema && itemData is TemplateData)
+                {
+                    status = RemoveParameterSchema(tcmItem, tcmDependentItem, out stackTraceMessage);
+                }
+
+                //remove component template linked schema
+                if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.Schema)
+                {
+                    status = RemoveCTLinkedSchema(tcmItem, tcmDependentItem, out stackTraceMessage);
+                }
+
                 //remove CP
                 if (itemType == ItemType.Page && (dependentItemType == ItemType.Component || dependentItemType == ItemType.ComponentTemplate))
                 {
                     status = RemoveComponentPresentation(tcmItem, tcmDependentItem, out stackTraceMessage);
                 }
-
                 //remove TBB from page template
-                if (itemType == ItemType.PageTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
+                else if (itemType == ItemType.PageTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
                 {
                     status = RemoveTbbFromPageTemplate(tcmItem, tcmDependentItem, out stackTraceMessage);
                 }
-
                 //remove TBB from component template
-                if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
+                else if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
                 {
                     status = RemoveTbbFromComponentTemplate(tcmItem, tcmDependentItem, out stackTraceMessage);
                 }
-
-                //remove component or keyword link from component
-                if (itemType == ItemType.Component && (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword))
+                //remove TBB from compound TBB
+                else if (itemType == ItemType.TemplateBuildingBlock && dependentItemType == ItemType.TemplateBuildingBlock)
                 {
+                    status = RemoveTbbFromCompoundTbb(tcmItem, tcmDependentItem, out stackTraceMessage);
+                }
+                //change schema keyword field to text field
+                else if (itemType == ItemType.Schema && dependentItemType == ItemType.Category)
+                {
+                    status = RemoveKeywordField(tcmItem, tcmDependentItem, out stackTraceMessage);
+                }
+                //remove component or keyword link from component
+                else if (itemType == ItemType.Component && (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword))
+                {
+                    status = CheckRemoveLinkFromComponent(tcmItem, tcmDependentItem);
+
+                    //component link is mandatory - schema field change
+                    if (status == LinkStatus.Mandatory)
+                    {
+                        RemoveSchemaMandatoryLinkFields(itemData, tcmDependentItem, results);
+                    }
+
                     status = RemoveLinkFromComponent(tcmItem, tcmDependentItem, out stackTraceMessage);
                 }
                 //remove component or keyword link from metadata
                 else if (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword)
                 {
+                    status = CheckRemoveLinkFromMetadata(tcmItem, tcmDependentItem);
+
+                    //component link is mandatory - schema field change
+                    if (status == LinkStatus.Mandatory)
+                    {
+                        RemoveSchemaMandatoryLinkFields(itemData, tcmDependentItem, results);
+                    }
+
                     status = RemoveLinkFromMetadata(tcmItem, tcmDependentItem, out stackTraceMessage);
                 }
 
-                if (status == LinkStatus.Found)
+                if (status == LinkStatus.Found && itemData is VersionedItemData)
                     status = RemoveHistory(tcmItem, tcmDependentItem, out stackTraceMessage);
+
+                if (status == LinkStatus.Found)
+                {
+                    result.Status = Status.Success;
+                    result.Message = string.Format("Item \"{1}\" was removed from \"{0}\".", itemData.GetWebDav(), dependentItemData == null ? tcmDependentItem : dependentItemData.GetWebDav());
+                }
             }
             else
             {
+                //check if possible to remove linked schema
+                if (itemType == ItemType.Folder && dependentItemType == ItemType.Schema)
+                {
+                    status = CheckRemoveFolderLinkedSchema(tcmItem);
+                }
+
+                //check if possible to remove metadata schema
+                if (dependentItemType == ItemType.Schema)
+                {
+                    status = CheckRemoveMetadataSchema(tcmItem, tcmDependentItem);
+                }
+
+                //check if possible to remove parameters schema
+                if (dependentItemType == ItemType.Schema && itemData is TemplateData)
+                {
+                    status = CheckRemoveParameterSchema(tcmItem, tcmDependentItem);
+                }
+
+                //check if possible to remove component template linked schema
+                if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.Schema)
+                {
+                    status = CheckRemoveCTLinkedSchema(tcmItem, tcmDependentItem);
+                }
+
                 //check if possible to remove CP
                 if (itemType == ItemType.Page && (dependentItemType == ItemType.Component || dependentItemType == ItemType.ComponentTemplate))
                 {
                     status = CheckRemoveComponentPresentation(tcmItem, tcmDependentItem);
                 }
-
                 //check if possible to remove TBB from page template
-                if (itemType == ItemType.PageTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
+                else if (itemType == ItemType.PageTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
                 {
                     status = CheckRemoveTbbFromPageTemplate(tcmItem, tcmDependentItem);
                 }
-
                 //check if possible to remove TBB from component template
-                if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
+                else if (itemType == ItemType.ComponentTemplate && dependentItemType == ItemType.TemplateBuildingBlock)
                 {
                     status = CheckRemoveTbbFromComponentTemplate(tcmItem, tcmDependentItem);
                 }
-
+                //check if possible to remove TBB from compound TBB
+                else if (itemType == ItemType.TemplateBuildingBlock && dependentItemType == ItemType.TemplateBuildingBlock)
+                {
+                    status = CheckRemoveTbbFromCompoundTbb(tcmItem, tcmDependentItem);
+                }
+                //change schema keyword field to text field
+                else if (itemType == ItemType.Schema && dependentItemType == ItemType.Category)
+                {
+                    status = CheckRemoveKeywordField(tcmItem, tcmDependentItem);
+                }
                 //check if possible to remove component or keyword link from component
-                if (itemType == ItemType.Component && (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword))
+                else if (itemType == ItemType.Component && (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword))
                 {
                     status = CheckRemoveLinkFromComponent(tcmItem, tcmDependentItem);
+
+                    //component link is mandatory - schema field needs to be changed
+                    if (status == LinkStatus.Mandatory)
+                    {
+                        CheckRemoveSchemaMandatoryLinkFields(itemData, tcmDependentItem, results);
+                        status = LinkStatus.Found;
+                    }
                 }
                 //check if possible to remove component or keyword link from metadata
                 else if (dependentItemType == ItemType.Component || dependentItemType == ItemType.Keyword)
                 {
                     status = CheckRemoveLinkFromMetadata(tcmItem, tcmDependentItem);
-                }
-            }
 
-            ResultInfo result = new ResultInfo();
-            result.ItemType = itemType;
-            result.TcmId = tcmItem;
-
-            RepositoryLocalObjectData item = ReadItem(tcmItem) as RepositoryLocalObjectData;
-            RepositoryLocalObjectData dependentItem = ReadItem(tcmDependentItem) as RepositoryLocalObjectData;
-
-            if (delete)
-            {
-                if (status == LinkStatus.Found)
-                {
-                    result.Status = Status.Success;
-                    result.Message = String.Format("Item \"{1}\" was removed from \"{0}\".", item == null ? tcmItem : item.GetWebDav().CutPath("/", 90, true), dependentItem == null ? tcmDependentItem : dependentItem.GetWebDav().CutPath("/", 90, true));
+                    //component link is mandatory - schema field needs to be changed
+                    if (status == LinkStatus.Mandatory)
+                    {
+                        CheckRemoveSchemaMandatoryLinkFields(itemData, tcmDependentItem, results);
+                        status = LinkStatus.Found;
+                    }
                 }
-                if (status == LinkStatus.Mandatory)
-                {
-                    result.Status = Status.Error;
-                    result.Message = String.Format("Not able to unlink \"{1}\" from \"{0}\".", item == null ? tcmItem : item.GetWebDav().CutPath("/", 90, true), dependentItem == null ? tcmDependentItem : dependentItem.GetWebDav().CutPath("/", 90, true));
-                }
-            }
-            else
-            {
+
                 if (status == LinkStatus.Found)
                 {
                     result.Status = Status.Info;
-                    result.Message = String.Format("Remove item \"{1}\" from \"{0}\".", item == null ? tcmItem : item.GetWebDav().CutPath("/", 90, true), dependentItem == null ? tcmDependentItem : dependentItem.GetWebDav().CutPath("/", 90, true));
-                }
-                if (status == LinkStatus.Mandatory)
-                {
-                    result.Status = Status.Warning;
-                    result.Message = String.Format("Not able to unlink \"{1}\" from \"{0}\".", item == null ? tcmItem : item.GetWebDav().CutPath("/", 90, true), dependentItem == null ? tcmDependentItem : dependentItem.GetWebDav().CutPath("/", 90, true));
+                    result.Message = string.Format("Remove item \"{1}\" from \"{0}\".", itemData.GetWebDav(), dependentItemData == null ? tcmDependentItem : dependentItemData.GetWebDav());
                 }
             }
 
@@ -4270,13 +4035,249 @@ namespace TridionDesktopTools.Core
             {
                 result.Status = Status.Error;
                 result.StackTrace = stackTraceMessage;
-                result.Message = String.Format("Not able to unlink \"{1}\" from \"{0}\".", item == null ? tcmItem : item.GetWebDav().CutPath("/", 90, true), dependentItem == null ? tcmDependentItem : dependentItem.GetWebDav().CutPath("/", 90, true));
+                result.Message = string.Format("Not able to unlink \"{1}\" from \"{0}\".", itemData.GetWebDav(), dependentItemData == null ? tcmDependentItem : dependentItemData.GetWebDav());
             }
 
-            if(status != LinkStatus.NotFound)
+            if (status != LinkStatus.NotFound)
                 results.Add(result);
 
             return status;
+        }
+
+        private static LinkStatus RemoveFolderLinkedSchema(string folderUri, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            FolderData innerFolderData = ReadItem(folderUri) as FolderData;
+            if (innerFolderData == null || innerFolderData.LinkedSchema == null || string.IsNullOrEmpty(innerFolderData.LinkedSchema.IdRef) || innerFolderData.LinkedSchema.IdRef == "tcm:0-0-0")
+                return LinkStatus.NotFound;
+
+            try
+            {
+                //change schema id
+                innerFolderData.LinkedSchema.IdRef = "tcm:0-0-0";
+
+                //make non-mandatory to aviod conflicts with inner components
+                innerFolderData.IsLinkedSchemaMandatory = false;
+
+                Client.Save(innerFolderData, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveFolderLinkedSchema(string folderUri)
+        {
+            FolderData innerFolderData = ReadItem(folderUri) as FolderData;
+            if (innerFolderData == null || innerFolderData.LinkedSchema == null || string.IsNullOrEmpty(innerFolderData.LinkedSchema.IdRef) || innerFolderData.LinkedSchema.IdRef == "tcm:0-0-0")
+                return LinkStatus.NotFound;
+
+            return LinkStatus.Found;
+        }
+
+        private static LinkStatus RemoveMetadataSchema(string itemUri, string schemaUri, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            RepositoryLocalObjectData itemData = ReadItem(itemUri) as RepositoryLocalObjectData;
+            if (itemData == null || itemData.MetadataSchema == null || string.IsNullOrEmpty(itemData.MetadataSchema.IdRef) || itemData.MetadataSchema.IdRef != schemaUri)
+                return LinkStatus.NotFound;
+
+            if (itemData is VersionedItemData)
+            {
+                VersionedItemData versionedItemData = (VersionedItemData)itemData;
+
+                if (versionedItemData.BluePrintInfo.IsShared == true)
+                {
+                    itemUri = GetBluePrintTopTcmId(itemUri);
+
+                    versionedItemData = ReadItem(itemUri) as VersionedItemData;
+                    if (versionedItemData == null)
+                        return LinkStatus.NotFound;
+                }
+
+                try
+                {
+                    versionedItemData = Client.CheckOut(versionedItemData.Id, true, new ReadOptions());
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                if (versionedItemData == null)
+                    return LinkStatus.NotFound;
+
+                //change schema id
+                versionedItemData.MetadataSchema.IdRef = "tcm:0-0-0";
+
+                try
+                {
+                    versionedItemData = (VersionedItemData)Client.Update(versionedItemData, new ReadOptions());
+                    Client.CheckIn(versionedItemData.Id, new ReadOptions());
+                    return LinkStatus.Found;
+                }
+                catch (Exception ex)
+                {
+                    stackTraceMessage = ex.Message;
+
+                    if (versionedItemData == null)
+                        return LinkStatus.Error;
+
+                    Client.UndoCheckOut(versionedItemData.Id, true, new ReadOptions());
+                    return LinkStatus.Error;
+                }
+            }
+
+            try
+            {
+                //change schema id
+                itemData.MetadataSchema.IdRef = "tcm:0-0-0";
+
+                Client.Save(itemData, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveMetadataSchema(string itemUri, string schemaUri)
+        {
+            RepositoryLocalObjectData itemData = ReadItem(itemUri) as RepositoryLocalObjectData;
+            if (itemData == null || itemData.MetadataSchema == null || string.IsNullOrEmpty(itemData.MetadataSchema.IdRef) || itemData.MetadataSchema.IdRef != schemaUri)
+                return LinkStatus.NotFound;
+
+            return LinkStatus.Found;
+        }
+
+        private static LinkStatus RemoveParameterSchema(string itemUri, string schemaUri, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            TemplateData templateData = ReadItem(itemUri) as TemplateData;
+            if (templateData == null || templateData.ParameterSchema == null || string.IsNullOrEmpty(templateData.ParameterSchema.IdRef) || templateData.ParameterSchema.IdRef != schemaUri)
+                return LinkStatus.NotFound;
+
+            if (templateData.BluePrintInfo.IsShared == true)
+            {
+                itemUri = GetBluePrintTopTcmId(itemUri);
+
+                templateData = ReadItem(itemUri) as TemplateData;
+                if (templateData == null)
+                    return LinkStatus.NotFound;
+            }
+
+            try
+            {
+                templateData = Client.CheckOut(templateData.Id, true, new ReadOptions()) as TemplateData;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (templateData == null)
+                return LinkStatus.NotFound;
+
+            //change schema id
+            templateData.ParameterSchema.IdRef = "tcm:0-0-0";
+
+            try
+            {
+                templateData = (TemplateData)Client.Update(templateData, new ReadOptions());
+                Client.CheckIn(templateData.Id, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+
+                if (templateData == null)
+                    return LinkStatus.Error;
+
+                Client.UndoCheckOut(templateData.Id, true, new ReadOptions());
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveParameterSchema(string itemUri, string schemaUri)
+        {
+            TemplateData templateData = ReadItem( itemUri) as TemplateData;
+            if (templateData == null || templateData.ParameterSchema == null || string.IsNullOrEmpty(templateData.ParameterSchema.IdRef) || templateData.ParameterSchema.IdRef != schemaUri)
+                return LinkStatus.NotFound;
+
+            return LinkStatus.Found;
+        }
+
+        private static LinkStatus RemoveCTLinkedSchema(string tcmComponentTemplate, string tcmSchema, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            ComponentTemplateData componentTemplate = ReadItem(tcmComponentTemplate) as ComponentTemplateData;
+            if (componentTemplate == null)
+                return LinkStatus.NotFound;
+
+            if (componentTemplate.RelatedSchemas.All(x => x.IdRef != tcmSchema))
+                return LinkStatus.NotFound;
+
+            if (componentTemplate.BluePrintInfo.IsShared == true)
+            {
+                tcmComponentTemplate = GetBluePrintTopTcmId(tcmComponentTemplate);
+
+                componentTemplate = ReadItem(tcmComponentTemplate) as ComponentTemplateData;
+                if (componentTemplate == null)
+                    return LinkStatus.NotFound;
+            }
+
+            try
+            {
+                componentTemplate = Client.CheckOut(componentTemplate.Id, true, new ReadOptions()) as ComponentTemplateData;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (componentTemplate == null)
+                return LinkStatus.NotFound;
+
+            componentTemplate.RelatedSchemas = componentTemplate.RelatedSchemas.Where(x => x.IdRef != tcmSchema).ToArray();
+
+            try
+            {
+                componentTemplate = (ComponentTemplateData)Client.Update(componentTemplate, new ReadOptions());
+                Client.CheckIn(componentTemplate.Id, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+
+                if (componentTemplate == null)
+                    return LinkStatus.Error;
+
+                Client.UndoCheckOut(componentTemplate.Id, true, new ReadOptions());
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveCTLinkedSchema(string tcmComponentTemplate, string tcmSchema)
+        {
+            ComponentTemplateData componentTemplate = ReadItem(tcmComponentTemplate) as ComponentTemplateData;
+            if (componentTemplate == null)
+                return LinkStatus.NotFound;
+
+            if (componentTemplate.RelatedSchemas.All(x => x.IdRef != tcmSchema))
+                return LinkStatus.NotFound;
+
+            return LinkStatus.Found;
         }
 
         private static LinkStatus RemoveComponentPresentation(string tcmPage, string tcmDependentItem, out string stackTraceMessage)
@@ -4287,7 +4288,7 @@ namespace TridionDesktopTools.Core
             if (page == null)
                 return LinkStatus.NotFound;
 
-            ComponentPresentationData[] newComponentPresentations = page.ComponentPresentations.Where(x => x.Component.IdRef.Split('-')[1] != tcmDependentItem.Split('-')[1] && x.ComponentTemplate.IdRef.Split('-')[1] != tcmDependentItem.Split('-')[1]).ToArray();
+            ComponentPresentationData[] newComponentPresentations = page.ComponentPresentations.Where(x => x.Component.IdRef.GetId() != tcmDependentItem.GetId() && x.ComponentTemplate.IdRef.GetId() != tcmDependentItem.GetId()).ToArray();
 
             if (page.ComponentPresentations.Length == newComponentPresentations.Length)
                 return LinkStatus.NotFound;
@@ -4307,8 +4308,7 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
-                stackTraceMessage = ex.Message;
-                return LinkStatus.NotFound;
+
             }
 
             if (page == null)
@@ -4340,7 +4340,7 @@ namespace TridionDesktopTools.Core
             if (page == null)
                 return LinkStatus.NotFound;
 
-            return page.ComponentPresentations.Any(x => x.Component.IdRef.Split('-')[1] == tcmDependentItem.Split('-')[1] || x.ComponentTemplate.IdRef.Split('-')[1] == tcmDependentItem.Split('-')[1]) ? LinkStatus.Found : LinkStatus.NotFound;
+            return page.ComponentPresentations.Any(x => x.Component.IdRef.GetId() == tcmDependentItem.GetId() || x.ComponentTemplate.IdRef.GetId() == tcmDependentItem.GetId()) ? LinkStatus.Found : LinkStatus.NotFound;
         }
 
         public static List<TbbInfo> GetTbbList(string templateContent)
@@ -4403,7 +4403,7 @@ namespace TridionDesktopTools.Core
 
         private static string RemoveTbbFromTemplate(string templateContent, string tcmTbb)
         {
-            List<TbbInfo> tbbList = GetTbbList(templateContent).Where(x => x.TcmId.Split('-')[1] != tcmTbb.Split('-')[1]).ToList();
+            List<TbbInfo> tbbList = GetTbbList(templateContent).Where(x => x.TcmId.GetId() != tcmTbb.GetId()).ToList();
             return GetTemplateContent(tbbList);
         }
 
@@ -4416,7 +4416,7 @@ namespace TridionDesktopTools.Core
                 return LinkStatus.NotFound;
 
             List<TbbInfo> tbbList = GetTbbList(pageTemplate.Content);
-            if (tbbList.Any(x => x.TcmId.Split('-')[1] == tcmTbb.Split('-')[1]))
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
             {
                 if (tbbList.Count == 1)
                     return LinkStatus.Mandatory;
@@ -4443,8 +4443,7 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
-                stackTraceMessage = ex.Message;
-                return LinkStatus.NotFound;
+
             }
 
             if (pageTemplate == null)
@@ -4477,7 +4476,7 @@ namespace TridionDesktopTools.Core
                 return LinkStatus.NotFound;
 
             List<TbbInfo> tbbList = GetTbbList(pageTemplate.Content);
-            if (tbbList.Any(x => x.TcmId.Split('-')[1] == tcmTbb.Split('-')[1]))
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
             {
                 return tbbList.Count == 1 ? LinkStatus.Mandatory : LinkStatus.Found;
             }
@@ -4493,7 +4492,7 @@ namespace TridionDesktopTools.Core
                 return LinkStatus.NotFound;
 
             List<TbbInfo> tbbList = GetTbbList(componentTemplate.Content);
-            if (tbbList.Any(x => x.TcmId.Split('-')[1] == tcmTbb.Split('-')[1]))
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
             {
                 if (tbbList.Count == 1)
                     return LinkStatus.Mandatory;
@@ -4520,8 +4519,7 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
-                stackTraceMessage = ex.Message;
-                return LinkStatus.NotFound;
+
             }
 
             if (componentTemplate == null)
@@ -4554,7 +4552,83 @@ namespace TridionDesktopTools.Core
                 return LinkStatus.NotFound;
 
             List<TbbInfo> tbbList = GetTbbList(componentTemplate.Content);
-            if (tbbList.Any(x => x.TcmId.Split('-')[1] == tcmTbb.Split('-')[1]))
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
+            {
+                return tbbList.Count == 1 ? LinkStatus.Mandatory : LinkStatus.Found;
+            }
+            return LinkStatus.NotFound;
+        }
+
+        private static LinkStatus RemoveTbbFromCompoundTbb(string tcmCompoundTbb, string tcmTbb, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            TemplateBuildingBlockData compoundTbb = ReadItem(tcmCompoundTbb) as TemplateBuildingBlockData;
+            if (compoundTbb == null || compoundTbb.TemplateType != "CompoundTemplate")
+                return LinkStatus.NotFound;
+
+            List<TbbInfo> tbbList = GetTbbList(compoundTbb.Content);
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
+            {
+                if (tbbList.Count == 1)
+                    return LinkStatus.Mandatory;
+            }
+            else
+            {
+                return LinkStatus.NotFound;
+            }
+
+            string newContent = RemoveTbbFromTemplate(compoundTbb.Content, tcmTbb);
+
+            if (compoundTbb.BluePrintInfo.IsShared == true)
+            {
+                tcmCompoundTbb = GetBluePrintTopTcmId(tcmCompoundTbb);
+
+                compoundTbb = ReadItem(tcmCompoundTbb) as TemplateBuildingBlockData;
+                if (compoundTbb == null)
+                    return LinkStatus.NotFound;
+            }
+
+            try
+            {
+                compoundTbb = Client.CheckOut(compoundTbb.Id, true, new ReadOptions()) as TemplateBuildingBlockData;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (compoundTbb == null)
+                return LinkStatus.NotFound;
+
+            compoundTbb.Content = newContent;
+
+            try
+            {
+                compoundTbb = (TemplateBuildingBlockData)Client.Update(compoundTbb, new ReadOptions());
+                Client.CheckIn(compoundTbb.Id, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+
+                if (compoundTbb == null)
+                    return LinkStatus.Error;
+
+                Client.UndoCheckOut(compoundTbb.Id, true, new ReadOptions());
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveTbbFromCompoundTbb(string tcmCompoundTbb, string tcmTbb)
+        {
+            TemplateBuildingBlockData compoundTbb = ReadItem(tcmCompoundTbb) as TemplateBuildingBlockData;
+            if (compoundTbb == null || compoundTbb.TemplateType != "CompoundTemplate")
+                return LinkStatus.NotFound;
+
+            List<TbbInfo> tbbList = GetTbbList(compoundTbb.Content);
+            if (tbbList.Any(x => x.TcmId.GetId() == tcmTbb.GetId()))
             {
                 return tbbList.Count == 1 ? LinkStatus.Mandatory : LinkStatus.Found;
             }
@@ -4568,19 +4642,17 @@ namespace TridionDesktopTools.Core
 
             foreach (ComponentFieldData value in values)
             {
-                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.IsMultiValue && value.Value is IList && ((IList)value.Value).Cast<XElement>().Any(x => x.Attribute(linkNs + "href").Value.Split('-')[1] == linkUri.Split('-')[1]))
+                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.IsMultiValue && value.Value is IList && ((IList)value.Value).Cast<XElement>().Any(x => x.Attribute(linkNs + "href").Value.GetId() == linkUri.GetId()))
                 {
-                    List<XElement> elements = ((IList)value.Value).Cast<XElement>().Where(x => x.Attribute(linkNs + "href").Value.Split('-')[1] != linkUri.Split('-')[1]).ToList();
+                    List<XElement> elements = ((IList)value.Value).Cast<XElement>().Where(x => x.Attribute(linkNs + "href").Value.GetId() != linkUri.GetId()).ToList();
 
                     if (value.IsMandatory && elements.Count == 0)
-                    {
                         return values;
-                    }
 
                     value.Value = elements;
                     newValues.Add(value);
                 }
-                else if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.Value is XElement && ((XElement)value.Value).Attribute(linkNs + "href") != null && ((XElement)value.Value).Attribute(linkNs + "href").Value.Split('-')[1] == linkUri.Split('-')[1])
+                else if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.Value is XElement && ((XElement)value.Value).Attribute(linkNs + "href") != null && ((XElement)value.Value).Attribute(linkNs + "href").Value.GetId() == linkUri.GetId())
                 {
                     if (value.IsMandatory)
                         return values;
@@ -4615,20 +4687,20 @@ namespace TridionDesktopTools.Core
 
             foreach (ComponentFieldData value in values)
             {
-                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.IsMultiValue && value.Value is IList && ((IList)value.Value).Cast<XElement>().Any(x => x.Attribute(linkNs + "href").Value.Split('-')[1] == linkUri.Split('-')[1]))
+                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.IsMultiValue && value.Value is IList && ((IList)value.Value).Cast<XElement>().Any(x => x.Attribute(linkNs + "href").Value.GetId() == linkUri.GetId()))
                 {
-                    List<XElement> elements = ((IList)value.Value).Cast<XElement>().Where(x => x.Attribute(linkNs + "href").Value.Split('-')[1] != linkUri.Split('-')[1]).ToList();
+                    List<XElement> elements = ((IList)value.Value).Cast<XElement>().Where(x => x.Attribute(linkNs + "href").Value.GetId() != linkUri.GetId()).ToList();
 
                     if (value.IsMandatory && elements.Count == 0)
-                    {
                         return LinkStatus.Mandatory;
-                    }
+                    
                     return LinkStatus.Found;
                 }
-                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.Value is XElement && ((XElement)value.Value).Attribute(linkNs + "href") != null && ((XElement)value.Value).Attribute(linkNs + "href").Value.Split('-')[1] == linkUri.Split('-')[1])
+                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.Value is XElement && ((XElement)value.Value).Attribute(linkNs + "href") != null && ((XElement)value.Value).Attribute(linkNs + "href").Value.GetId() == linkUri.GetId())
                 {
                     if (value.IsMandatory)
                         return LinkStatus.Mandatory;
+
                     return LinkStatus.Found;
                 }
                 if (value.SchemaField.IsEmbedded())
@@ -4656,12 +4728,77 @@ namespace TridionDesktopTools.Core
             return LinkStatus.NotFound;
         }
 
+        //gets list of pairs schemaUri|field that are mandatory and contains specified link
+        private static Dictionary<string, ItemFieldDefinitionData> GetMandatoryLinkFields(XElement xml, XNamespace ns, string schemaUri, string linkUri)
+        {
+            Dictionary<string, ItemFieldDefinitionData> res = new Dictionary<string, ItemFieldDefinitionData>();
+
+            if (xml == null || string.IsNullOrEmpty(schemaUri) || string.IsNullOrEmpty(linkUri) || schemaUri == "tcm:0-0-0" || linkUri == "tcm:0-0-0")
+                return res;
+
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
+            if (schema == null)
+                return res;
+
+            List<ItemFieldDefinitionData> schemaFields = schema.Purpose == SchemaPurpose.Metadata ? GetSchemaMetadataFields(schemaUri) : GetSchemaFields(schemaUri);
+
+            List<ComponentFieldData> values = GetValues(ns, schemaFields, xml);
+
+            XNamespace linkNs = "http://www.w3.org/1999/xlink";
+
+            foreach (ComponentFieldData value in values)
+            {
+                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.IsMultiValue && value.Value is IList && ((IList)value.Value).Cast<XElement>().Any(x => x.Attribute(linkNs + "href").Value.GetId() == linkUri.GetId()))
+                {
+                    List<XElement> elements = ((IList)value.Value).Cast<XElement>().Where(x => x.Attribute(linkNs + "href").Value.GetId() != linkUri.GetId()).ToList();
+
+                    if (value.IsMandatory && elements.Count == 0)
+                        res.Add(schemaUri, value.SchemaField);
+                }
+                if ((value.SchemaField.IsComponentLink() || value.SchemaField.IsMultimedia() || value.SchemaField.IsKeyword()) && value.Value is XElement && ((XElement)value.Value).Attribute(linkNs + "href") != null && ((XElement)value.Value).Attribute(linkNs + "href").Value.GetId() == linkUri.GetId())
+                {
+                    if (value.IsMandatory)
+                        res.Add(schemaUri, value.SchemaField);
+                }
+                if (value.SchemaField.IsEmbedded())
+                {
+                    if (value.Value is XElement)
+                    {
+                        Dictionary<string, ItemFieldDefinitionData> resEmbedded = GetMandatoryLinkFields((XElement)value.Value, ns, ((EmbeddedSchemaFieldDefinitionData)value.SchemaField).EmbeddedSchema.IdRef, linkUri);
+                        if (resEmbedded.Count > 0)
+                        {
+                            foreach (KeyValuePair<string, ItemFieldDefinitionData> pair in resEmbedded)
+                            {
+                                res.Add(pair.Key, pair.Value);
+                            }
+                        }
+                    }
+                    else if (value.Value is IList)
+                    {
+                        foreach (XElement childValue in ((IList)value.Value).Cast<XElement>())
+                        {
+                            Dictionary<string, ItemFieldDefinitionData> resEmbedded = GetMandatoryLinkFields(childValue, ns, ((EmbeddedSchemaFieldDefinitionData)value.SchemaField).EmbeddedSchema.IdRef, linkUri);
+                            if (resEmbedded.Count > 0)
+                            {
+                                foreach (KeyValuePair<string, ItemFieldDefinitionData> pair in resEmbedded)
+                                {
+                                    res.Add(pair.Key, pair.Value);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return res;
+        }
+
         private static string RemoveLinkFromXml(string schemaUri, string xmlContent, string linkUri)
         {
             if (string.IsNullOrEmpty(xmlContent))
                 return xmlContent;
 
-            SchemaData schema = Client.Read(schemaUri, null) as SchemaData;
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
             if(schema == null)
                 return xmlContent;
 
@@ -4695,7 +4832,7 @@ namespace TridionDesktopTools.Core
             if (component == null)
                 return LinkStatus.NotFound;
 
-            SchemaData schema = Client.Read(component.Schema.IdRef, null) as SchemaData;
+            SchemaData schema = ReadItem(component.Schema.IdRef) as SchemaData;
             if(schema == null)
                 return LinkStatus.NotFound;
 
@@ -4723,8 +4860,7 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
-                stackTraceMessage = ex.Message;
-                return LinkStatus.NotFound;
+
             }
 
             if (component == null)
@@ -4757,7 +4893,7 @@ namespace TridionDesktopTools.Core
             if (component == null)
                 return LinkStatus.NotFound;
 
-            SchemaData schema = Client.Read(component.Schema.IdRef, null) as SchemaData;
+            SchemaData schema = ReadItem(component.Schema.IdRef) as SchemaData;
             if (schema == null)
                 return LinkStatus.NotFound;
 
@@ -4774,7 +4910,7 @@ namespace TridionDesktopTools.Core
             if (item == null)
                 return LinkStatus.NotFound;
 
-            SchemaData metadataSchema = Client.Read(item.MetadataSchema.IdRef, null) as SchemaData;
+            SchemaData metadataSchema = ReadItem(item.MetadataSchema.IdRef) as SchemaData;
             if (metadataSchema == null)
                 return LinkStatus.NotFound;
 
@@ -4801,8 +4937,7 @@ namespace TridionDesktopTools.Core
             }
             catch (Exception ex)
             {
-                stackTraceMessage = ex.Message;
-                return LinkStatus.NotFound;
+
             }
 
             if (item == null)
@@ -4830,20 +4965,243 @@ namespace TridionDesktopTools.Core
         private static LinkStatus CheckRemoveLinkFromMetadata(string tcmItem, string tcmLink)
         {
             RepositoryLocalObjectData item = ReadItem(tcmItem) as RepositoryLocalObjectData;
-            if (item == null)
+            if (item == null || item.MetadataSchema == null || item.MetadataSchema.IdRef == "tcm:0-0-0")
                 return LinkStatus.NotFound;
 
-            //todo: test it
-            if(item.MetadataSchema == null || item.MetadataSchema.IdRef == "tcm:0-0-0")
-                return LinkStatus.NotFound;
-
-            SchemaData metadataSchema = Client.Read(item.MetadataSchema.IdRef, null) as SchemaData;
+            SchemaData metadataSchema = ReadItem(item.MetadataSchema.IdRef) as SchemaData;
             if (metadataSchema == null)
                 return LinkStatus.NotFound;
 
             List<ItemFieldDefinitionData> metadataSchemaFields = GetSchemaFields(item.MetadataSchema.IdRef);
 
             return CheckRemoveLinkFromValues(XElement.Parse(item.Metadata), metadataSchema.NamespaceUri, metadataSchemaFields, tcmLink);
+        }
+
+        private static void RemoveSchemaMandatoryLinkFields(RepositoryLocalObjectData itemData, string tcmDependentItem, List<ResultInfo> results)
+        {
+            string schemaUri = string.Empty;
+            XElement xml = null;
+
+            if (itemData is ComponentData)
+            {
+                ComponentData component = (ComponentData)itemData;
+                schemaUri = component.Schema.IdRef;
+                xml = XElement.Parse(component.Content);
+            }
+            else if (!string.IsNullOrEmpty(itemData.Metadata) && !string.IsNullOrEmpty(schemaUri) && schemaUri != "tcm:0-0-0")
+            {
+                schemaUri = itemData.MetadataSchema.IdRef;
+                xml = XElement.Parse(itemData.Metadata);
+            }
+
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
+            if (schema == null)
+                return;
+
+            Dictionary<string, ItemFieldDefinitionData> mandatoryLinkFields = GetMandatoryLinkFields(xml, schema.NamespaceUri, schemaUri, tcmDependentItem);
+
+            foreach (string innerSchemaUri in mandatoryLinkFields.Keys)
+            {
+                ItemFieldDefinitionData field = mandatoryLinkFields[innerSchemaUri];
+
+                SchemaData innerSchemaData = ReadItem(innerSchemaUri) as SchemaData;
+                if (innerSchemaData == null)
+                    continue;
+
+                SchemaFieldsData schemaFieldsData = Client.ReadSchemaFields(innerSchemaUri, false, null);
+                if (schemaFieldsData.Fields != null && schemaFieldsData.Fields.Any(x => x.Name == field.Name))
+                {
+                    schemaFieldsData.Fields.First(x => x.Name == field.Name).MinOccurs = 0;
+                }
+                if (schemaFieldsData.MetadataFields != null && schemaFieldsData.MetadataFields.Any(x => x.Name == field.Name))
+                {
+                    schemaFieldsData.MetadataFields.First(x => x.Name == field.Name).MinOccurs = 0;
+                }
+
+                try
+                {
+                    innerSchemaData = Client.CheckOut(innerSchemaData.Id, true, new ReadOptions()) as SchemaData;
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                if (innerSchemaData == null)
+                    return;
+
+                innerSchemaData.Xsd = Client.ConvertSchemaFieldsToXsd(schemaFieldsData).ToString();
+
+                try
+                {
+                    Client.Save(innerSchemaData, new ReadOptions());
+                    Client.CheckIn(innerSchemaUri, new ReadOptions());
+
+                    results.Add(new ResultInfo
+                    {
+                        Status = Status.Success,
+                        Item = innerSchemaData.ToItem(),
+                        Message = string.Format("Make non-mandatory field \"{0}\" in \"{1}\".", field.Name, innerSchemaData.GetWebDav())
+                    });
+                }
+                catch (Exception ex)
+                {
+                    results.Add(new ResultInfo
+                    {
+                        Message = string.Format("Error removing folder linked schema for \"{0}\". Error message \"{1}\"", itemData.GetWebDav(), ex.Message),
+                        Item = itemData.ToItem(),
+                        Status = Status.Error,
+                        StackTrace = ex.StackTrace
+                    });
+                }
+            }
+        }
+
+        private static void CheckRemoveSchemaMandatoryLinkFields(RepositoryLocalObjectData itemData, string tcmDependentItem, List<ResultInfo> results)
+        {
+            string schemaUri = string.Empty;
+            XElement xml = null;
+
+            if (itemData is ComponentData)
+            {
+                ComponentData component = (ComponentData)itemData;
+                schemaUri = component.Schema.IdRef;
+                xml = XElement.Parse(component.Content);
+            }
+            else if (!string.IsNullOrEmpty(itemData.Metadata) && !string.IsNullOrEmpty(schemaUri) && schemaUri != "tcm:0-0-0")
+            {
+                schemaUri = itemData.MetadataSchema.IdRef;
+                xml = XElement.Parse(itemData.Metadata);
+            }
+
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
+            if (schema == null)
+                return;
+
+            Dictionary<string, ItemFieldDefinitionData> mandatoryLinkFields = GetMandatoryLinkFields(xml, schema.NamespaceUri, schemaUri, tcmDependentItem);
+
+            foreach (string innerSchemaUri in mandatoryLinkFields.Keys)
+            {
+                ItemFieldDefinitionData field = mandatoryLinkFields[innerSchemaUri];
+
+                SchemaData innerSchemaData = ReadItem(innerSchemaUri) as SchemaData;
+                if (innerSchemaData == null)
+                    continue;
+
+                results.Add(new ResultInfo
+                {
+                    Status = Status.Info,
+                    Item = innerSchemaData.ToItem(),
+                    Message = string.Format("Make non-mandatory field \"{0}\" in \"{1}\".", field.Name, innerSchemaData.GetWebDav())
+                });
+            }
+        }
+
+        private static LinkStatus RemoveKeywordField(string schemaUri, string categoryUri, out string stackTraceMessage)
+        {
+            stackTraceMessage = "";
+
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
+            if (schema == null)
+                return LinkStatus.NotFound;
+
+            if (schema.BluePrintInfo.IsShared == true)
+            {
+                schemaUri = GetBluePrintTopTcmId(schemaUri);
+
+                schema = ReadItem(schemaUri) as SchemaData;
+                if (schema == null)
+                    return LinkStatus.NotFound;
+            }
+
+            SchemaFieldsData schemaFieldsData = Client.ReadSchemaFields(schemaUri, false, null);
+
+            if (schema.Purpose != SchemaPurpose.Metadata && schemaFieldsData.Fields != null && schemaFieldsData.Fields.Any())
+            {
+                List<ItemFieldDefinitionData> schemaFields = schemaFieldsData.Fields.ToList();
+                for (int index = 0; index < schemaFields.Count; index++)
+                {
+                    if (!(schemaFields[index] is KeywordFieldDefinitionData))
+                        continue;
+
+                    KeywordFieldDefinitionData keywordField = (KeywordFieldDefinitionData)schemaFields[index];
+                    if (keywordField.Category.IdRef.GetId() != categoryUri.GetId())
+                        continue;
+
+                    schemaFieldsData.Fields[index] = new SingleLineTextFieldDefinitionData { Name = keywordField.Name, Description = keywordField.Description, DefaultValue = keywordField.DefaultValue == null ? null : keywordField.DefaultValue.Title, MinOccurs = keywordField.MinOccurs, MaxOccurs = keywordField.MaxOccurs };
+                }
+            }
+
+            if (schemaFieldsData.MetadataFields != null && schemaFieldsData.MetadataFields.Any())
+            {
+                List<ItemFieldDefinitionData> metadataSchemaFields = schemaFieldsData.MetadataFields.ToList();
+                for (int index = 0; index < metadataSchemaFields.Count; index++)
+                {
+                    if (!(metadataSchemaFields[index] is KeywordFieldDefinitionData))
+                        continue;
+
+                    KeywordFieldDefinitionData keywordField = (KeywordFieldDefinitionData)metadataSchemaFields[index];
+                    if (keywordField.Category.IdRef.GetId() != categoryUri.GetId())
+                        continue;
+
+                    schemaFieldsData.MetadataFields[index] = new SingleLineTextFieldDefinitionData { Name = keywordField.Name, Description = keywordField.Description, DefaultValue = keywordField.DefaultValue == null ? null : keywordField.DefaultValue.Title, MinOccurs = keywordField.MinOccurs, MaxOccurs = keywordField.MaxOccurs };
+                }
+            }
+
+            try
+            {
+                schema = Client.CheckOut(schema.Id, true, new ReadOptions()) as SchemaData;
+            }
+            catch (Exception ex)
+            {
+
+            }
+
+            if (schema == null)
+                return LinkStatus.NotFound;
+
+            schema.Xsd = Client.ConvertSchemaFieldsToXsd(schemaFieldsData).ToString();
+
+            try
+            {
+                schema = (SchemaData)Client.Update(schema, new ReadOptions());
+                Client.CheckIn(schema.Id, new ReadOptions());
+                return LinkStatus.Found;
+            }
+            catch (Exception ex)
+            {
+                stackTraceMessage = ex.Message;
+                if (schema == null)
+                    return LinkStatus.Error;
+
+                Client.UndoCheckOut(schema.Id, true, new ReadOptions());
+                return LinkStatus.Error;
+            }
+        }
+
+        private static LinkStatus CheckRemoveKeywordField(string schemaUri, string categoryUri)
+        {
+            SchemaData schema = ReadItem(schemaUri) as SchemaData;
+            if (schema == null)
+                return LinkStatus.NotFound;
+
+            SchemaFieldsData schemaFieldsData = Client.ReadSchemaFields(schemaUri, false, null);
+
+            if (schema.Purpose != SchemaPurpose.Metadata && schemaFieldsData.Fields != null && schemaFieldsData.Fields.Any())
+            {
+                List<ItemFieldDefinitionData> schemaFields = schemaFieldsData.Fields.ToList();
+                if (schemaFields.OfType<KeywordFieldDefinitionData>().Any(keywordField => keywordField.Category.IdRef.GetId() == categoryUri.GetId()))
+                    return LinkStatus.Found;
+            }
+
+            if (schemaFieldsData.MetadataFields != null && schemaFieldsData.MetadataFields.Any())
+            {
+                List<ItemFieldDefinitionData> metadataSchemaFields = schemaFieldsData.MetadataFields.ToList();
+                if (metadataSchemaFields.OfType<KeywordFieldDefinitionData>().Any(keywordField => keywordField.Category.IdRef.GetId() == categoryUri.GetId()))
+                    return LinkStatus.Found;
+            }
+
+            return LinkStatus.NotFound;
         }
 
         private static LinkStatus RemoveHistory(string tcmItem, string parentTcmId, out string stackTraceMessage)
@@ -4862,7 +5220,7 @@ namespace TridionDesktopTools.Core
                     continue;
 
                 List<string> historyItemUsedItems = GetUsedItems(historyItem.TcmId);
-                if (historyItemUsedItems.Any(x => x.Split('-')[1] == parentTcmId.Split('-')[1]))
+                if (historyItemUsedItems.Any(x => x.GetId() == parentTcmId.GetId()))
                 {
                     try
                     {
@@ -4885,23 +5243,45 @@ namespace TridionDesktopTools.Core
             if (tcmItem.StartsWith("tcm:0-"))
                 return;
 
-            tcmItem = GetBluePrintTopTcmId(tcmItem);
-            
-            ItemType itemType = GetItemType(tcmItem);
+            if (results.Any(x => x.Status == Status.Error))
+                return;
 
-            RepositoryLocalObjectData item = (RepositoryLocalObjectData)Client.Read(tcmItem, new ReadOptions());
+            if (results.Count > 50)
+            {
+                results.Insert(0, new ResultInfo
+                {
+                    Message = "Delete stack exceeds 50 items. Please select other item",
+                    Item = new ItemInfo { Title = "Delete stack exceeds 50 items" },
+                    Status = Status.Error
+                });
+
+                return;
+            }
+
+            if (!ExistsItem(tcmItem))
+                return;
+
+            RepositoryLocalObjectData itemData = (RepositoryLocalObjectData)Client.Read(tcmItem, new ReadOptions());
 
             if (level > 3)
             {
                 results.Add(new ResultInfo
                 {
-                    Message = String.Format("Recoursion level is bigger than 3. Try to select different item than \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                    TcmId = tcmItem,
-                    ItemType = itemType,
+                    Message = String.Format("Recoursion level is bigger than 3. Try to select different item than \"{0}\"", itemData.GetWebDav().CutPath("/", 90, true)),
+                    Item = itemData.ToItem(),
                     Status = Status.Error
                 });
 
                 return;
+            }
+
+            if (itemData.BluePrintInfo.IsShared == true)
+            {
+                tcmItem = GetBluePrintTopTcmId(tcmItem);
+
+                itemData = ReadItem(tcmItem) as RepositoryLocalObjectData;
+                if (itemData == null)
+                    return;
             }
 
             bool isAnyLocalized = IsAnyLocalized(tcmItem);
@@ -4913,263 +5293,274 @@ namespace TridionDesktopTools.Core
             {
                 foreach (string usingItem in usingItems)
                 {
+                    //using category includes category into using list
+                    if (usingItem.GetId() == tcmItem.GetId())
+                        continue;
+
                     LinkStatus status = RemoveDependency(usingItem, tcmItem, delete, results);
                     if (status == LinkStatus.Error)
                     {
                         return;
                     }
+
+                    //not able to unlink objects - delete whole parent object
                     if (status != LinkStatus.Found)
                     {
-                        DeleteTridionObject(usingItem, delete, results, tcmItem, usingCurrentItems.Any(x => x == usingItem), level + 1);
-                    }
-                }
-            }
+                        ItemType usingItemType = GetItemType(usingItem);
 
-            //remove folder linked schema
-            if (itemType == ItemType.Folder)
-            {
-                try
-                {
-                    FolderData folder = item as FolderData;
-                    if (folder != null && folder.LinkedSchema != null && folder.LinkedSchema.IdRef != "tcm:0-0-0")
-                    {
-                        if (delete)
-                            RemoveFolderLinkedSchema(tcmItem);
-
-                        if (delete)
+                        if (usingItemType == ItemType.Folder || usingItemType == ItemType.StructureGroup || usingItemType == ItemType.Category)
                         {
-                            results.Add(new ResultInfo
-                            {
-                                Message = String.Format("Removed folder linked schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                                TcmId = tcmItem,
-                                ItemType = itemType,
-                                Status = Status.Success
-                            });
+                            DeleteFolderOrStructureGroup(usingItem, delete, results, level + 1);
                         }
-
                         else
                         {
-                            results.Add(new ResultInfo
-                            {
-                                Message = String.Format("Remove folder linked schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                                TcmId = tcmItem,
-                                ItemType = itemType,
-                                Status = Status.Info
-                            });
+                            DeleteTridionObject(usingItem, delete, results, tcmItem, usingCurrentItems.Any(x => x == usingItem), level + 1);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new ResultInfo
-                    {
-                        Message = String.Format("Error removing folder linked schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                        TcmId = tcmItem,
-                        ItemType = itemType,
-                        Status = Status.Error,
-                        StackTrace = ex.StackTrace
-                    });
                 }
             }
 
-            //remove metadata
-            if (itemType == ItemType.Folder || itemType == ItemType.StructureGroup || itemType == ItemType.Publication)
+            if (delete)
             {
-                try
+                //item is published - not possible to delete - STOP PROCESSING
+                if (IsPublished(tcmItem))
                 {
-                    if (item != null && item.MetadataSchema != null && item.MetadataSchema.IdRef != "tcm:0-0-0")
-                    {
-                        if (delete)
-                            RemoveMetadataSchema(tcmItem);
-
-                        if (delete)
-                        {
-                            results.Add(new ResultInfo
-                            {
-                                Message = String.Format("Removed metadata schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                                TcmId = tcmItem,
-                                ItemType = itemType,
-                                Status = Status.Success
-                            });
-                        }
-
-                        else
-                        {
-                            results.Add(new ResultInfo
-                            {
-                                Message = String.Format("Remove metadata schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                                TcmId = tcmItem,
-                                ItemType = itemType,
-                                Status = Status.Info
-                            });
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new ResultInfo
-                    {
-                        Message = String.Format("Error removing metadata schema for \"{0}\"", item.GetWebDav().CutPath("/", 80, true)),
-                        TcmId = tcmItem,
-                        ItemType = itemType,
-                        Status = Status.Error,
-                        StackTrace = ex.StackTrace
-                    });
-                }
-            }
-
-            try
-            {
-                if (delete)
-                {
-                    if (!currentVersion)
-                    {
-                        //remove used versions
-                        string stackTraceMessage;
-                        LinkStatus status = RemoveHistory(tcmItem, parentTcmId, out stackTraceMessage);
-                        if (status == LinkStatus.Error)
-                        {
-                            results.Add(new ResultInfo
-                            {
-                                Message = String.Format("Error removing history from item \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                                TcmId = tcmItem,
-                                ItemType = itemType,
-                                Status = Status.Error,
-                                StackTrace = stackTraceMessage
-                            });
-                        }
-                    }
-                    else
-                    {
-                        //unlocalize before delete
-                        if (isAnyLocalized)
-                        {
-                            UnLocalizeAll(tcmItem);
-                        }
-
-                        //undo checkout
-                        try
-                        {
-                            Client.UndoCheckOut(tcmItem, true, new ReadOptions());
-                        }
-                        catch (Exception)
-                        {
-                        }
-
-                        //delete used item
-                        Client.Delete(tcmItem);
-                    }
-                }
-
-                if (delete)
-                {
-                    results.Add(new ResultInfo
-                    {
-                        Message = String.Format("Deleted item \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                        TcmId = tcmItem,
-                        ItemType = itemType,
-                        Status = Status.Success
-                    });
-                }
-                else
-                {
-                    if (isAnyLocalized)
+                    foreach (ItemInfo publishedItem in GetPublishedItems(itemData.ToItem()))
                     {
                         results.Add(new ResultInfo
                         {
-                            Message = String.Format("Unlocalize item \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                            TcmId = tcmItem,
-                            ItemType = itemType,
-                            Status = Status.Info
+                            Message = string.Format("Item \"{0}\" is published", publishedItem.Path),
+                            Item = publishedItem,
+                            Status = Status.Error
                         });
                     }
 
-                    if (IsPublished(tcmItem))
+                    return;
+                }
+
+                //unlocalize before delete
+                if (isAnyLocalized)
+                {
+                    try
+                    {
+                        UnLocalizeAll(tcmItem);
+
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Unlocalized item \"{0}\"", itemData.GetWebDav()),
+                            Item = itemData.ToItem(),
+                            Status = Status.Success
+                        });
+                    }
+                    catch (Exception ex)
                     {
                         results.Add(new ResultInfo
                         {
-                            Message = String.Format("Unpublish manually item \"{0}\" published at {1}", item.GetWebDav().CutPath("/", 80, true), GetPublishInfo(tcmItem)),
-                            TcmId = GetFirstPublishItemTcmId(tcmItem),
-                            ItemType = itemType,
+                            Message = string.Format("Error unlocalizing item \"{0}\". Error message \"{1}\"", itemData.GetWebDav(), ex.Message),
+                            Item = itemData.ToItem(),
+                            Status = Status.Error,
+                            StackTrace = ex.StackTrace
+                        });
+                    }
+                }
+
+                //undo checkout
+                try
+                {
+                    Client.UndoCheckOut(tcmItem, true, new ReadOptions());
+                }
+                catch (Exception ex)
+                {
+
+                }
+
+                if (!currentVersion && itemData is VersionedItemData)
+                {
+                    //remove used versions
+                    string stackTraceMessage;
+                    LinkStatus status = RemoveHistory(tcmItem, parentTcmId, out stackTraceMessage);
+                    if (status == LinkStatus.Found)
+                    {
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Removed history for item \"{0}\"", itemData.GetWebDav()),
+                            Item = itemData.ToItem(),
+                            Status = Status.Success
+                        });
+                    }
+                    else
+                    {
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Error removing history from item \"{0}\"", itemData.GetWebDav()),
+                            Item = itemData.ToItem(),
+                            Status = Status.Error,
+                            StackTrace = stackTraceMessage
+                        });
+                    }
+                }
+                else
+                {
+                    //delete used item
+                    try
+                    {
+                        Client.Delete(tcmItem);
+
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Deleteed item \"{0}\"", itemData.GetWebDav()),
+                            Item = itemData.ToItem(),
+                            Status = Status.Success
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Error deleting item \"{0}\". Error message \"{1}\"", itemData.GetWebDav(), ex.Message),
+                            Item = itemData.ToItem(),
+                            Status = Status.Error,
+                            StackTrace = ex.StackTrace
+                        });
+                    }
+                }
+            }
+            else
+            {
+                //item is published - not possible to delete - WARNING
+                if (IsPublished(tcmItem))
+                {
+                    foreach (ItemInfo publishedItem in GetPublishedItems(itemData.ToItem()))
+                    {
+                        results.Add(new ResultInfo
+                        {
+                            Message = string.Format("Unpublish manually item \"{0}\"", publishedItem.Path),
+                            Item = publishedItem,
                             Status = Status.Warning
                         });
                     }
-
-                    if (!currentVersion)
-                    {
-                        results.Add(new ResultInfo
-                        {
-                            Message =
-                                String.Format("Remove old versions of item \"{0}\"",
-                                    item.GetWebDav().CutPath("/", 80, true)),
-                            TcmId = tcmItem,
-                            ItemType = itemType,
-                            Status = Status.Info
-                        });
-                    }
-                    else
-                    {
-                        results.Add(new ResultInfo
-                        {
-                            Message = String.Format("Delete item \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                            TcmId = tcmItem,
-                            ItemType = itemType,
-                            Status = Status.Info
-                        });
-                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                results.Add(new ResultInfo
+
+                if (isAnyLocalized)
                 {
-                    Message = String.Format("Error deleting item \"{0}\"", item.GetWebDav().CutPath("/", 90, true)),
-                    TcmId = tcmItem,
-                    ItemType = itemType,
-                    Status = Status.Error,
-                    StackTrace = ex.StackTrace
-                });
-            }
-        }
+                    results.Add(new ResultInfo
+                    {
+                        Message = string.Format("Unlocalize item \"{0}\"", itemData.GetWebDav()),
+                        Item = itemData.ToItem(),
+                        Status = Status.Info
+                    });
+                }
 
-        public static void DeleteFolderOrStructureGroup(string tcmFolder, bool delete, List<ResultInfo> results, int level = 0, bool onlyCurrentBluePrint = false)
-        {
-            bool isCurrentBluePrint = tcmFolder == GetBluePrintTopTcmId(tcmFolder);
-            
-            tcmFolder = GetBluePrintBottomTcmId(tcmFolder);
-
-            List<ResultInfo> folderResults = new List<ResultInfo>();
-
-            List<ItemInfo> childItems = GetItemsByParentContainer(tcmFolder);
-            if (onlyCurrentBluePrint)
-            {
-                childItems = childItems.Where(x => String.IsNullOrEmpty(x.FromPub)).ToList();
-            }
-
-            //delete inner items
-            foreach (ItemInfo childItem in childItems)
-            {
-                if (childItem.ItemType == ItemType.Folder || childItem.ItemType == ItemType.StructureGroup)
+                if (!currentVersion)
                 {
-                    DeleteFolderOrStructureGroup(childItem.TcmId, delete, folderResults, level, onlyCurrentBluePrint);
+                    results.Add(new ResultInfo
+                    {
+                        Message = string.Format("Remove old versions of item \"{0}\"", itemData.GetWebDav()),
+                        Item = itemData.ToItem(),
+                        Status = Status.Info
+                    });
                 }
                 else
                 {
-                    if (ExistsItem(childItem.TcmId))
-                        DeleteTridionObject(childItem.TcmId, delete, folderResults, tcmFolder, true, level);
+                    results.Add(new ResultInfo
+                    {
+                        Message = string.Format("Delete item \"{0}\"", itemData.GetWebDav()),
+                        Item = itemData.ToItem(),
+                        Status = Status.Delete
+                    });
+                }
+            }
+        }
+
+        public static void DeleteFolderOrStructureGroup(string tcmFolder, bool delete, List<ResultInfo> results, int level = 0)
+        {
+            if (results.Any(x => x.Status == Status.Error))
+                return;
+
+            if (results.Count > 50)
+            {
+                results.Insert(0, new ResultInfo
+                {
+                    Message = "Delete stack exceeds 50 items. Please select other item",
+                    Item = new ItemInfo { Title = "Delete stack exceeds 50 items" },
+                    Status = Status.Error
+                });
+
+                return;
+            }
+
+            if (level > 3)
+            {
+                RepositoryLocalObjectData itemData = (RepositoryLocalObjectData)ReadItem(tcmFolder);
+
+                results.Add(new ResultInfo
+                {
+                    Message = string.Format("Recoursion level is bigger than 3. Try delete item  manually \"{0}\"", itemData.GetWebDav()),
+                    Item = itemData.ToItem(),
+                    Status = Status.Error
+                });
+
+                return;
+            }
+
+            List<BluePrintNodeData> bluePrintItems = GetBluePrintItems(tcmFolder);
+            bluePrintItems.Reverse();
+
+            foreach (BluePrintNodeData bluePrintItem in bluePrintItems)
+            {
+                List<ItemInfo> childItems = GetItemsByParentContainer(bluePrintItem.Item.Id).Where(x => x.IsLocal).ToList();
+
+                //delete inner items
+                foreach (ItemInfo childItem in childItems)
+                {
+                    if (childItem.ItemType == ItemType.Folder || childItem.ItemType == ItemType.StructureGroup)
+                    {
+                        DeleteFolderOrStructureGroup(childItem.TcmId, delete, results, level + 1);
+                    }
+                    else
+                    {
+                        if (ExistsItem(childItem.TcmId))
+                            DeleteTridionObject(childItem.TcmId, delete, results, tcmFolder, true, level);
+                    }
+
+                    if (results.Any(x => x.Status == Status.Error))
+                        return;
                 }
             }
 
-            results.AddRange(folderResults.Distinct(new ResultInfoComparer()));
-
-            //delete folder or SG as an object
-            if (!onlyCurrentBluePrint || isCurrentBluePrint)
-                DeleteTridionObject(tcmFolder, delete, results, string.Empty, true, level);
+            DeleteTridionObject(tcmFolder, delete, results, string.Empty, true, level);
         }
 
         public static void DeletePublication(string tcmPublication, bool delete, List<ResultInfo> results, int level = 0)
         {
-            PublicationData publication = (PublicationData)Client.Read(tcmPublication, new ReadOptions());
+            if (results.Any(x => x.Status == Status.Error))
+                return;
+
+            if (results.Count > 50)
+            {
+                results.Insert(0, new ResultInfo
+                {
+                    Message = "Delete stack exceeds 50 items. Please select other item",
+                    Item = new ItemInfo { Title = "Delete stack exceeds 50 items" },
+                    Status = Status.Error
+                });
+
+                return;
+            }
+
+            PublicationData publication = (PublicationData)ReadItem(tcmPublication);
+
+            if (level > 3)
+            {
+                results.Add(new ResultInfo
+                {
+                    Message = string.Format("Recoursion level is bigger than 3. Try delete publication  manually \"{0}\"", publication.Title),
+                    Item = publication.ToItem(),
+                    Status = Status.Error
+                });
+
+                return;
+            }
 
             //delete dependent publications
             List<string> usingItems = GetUsingItems(tcmPublication);
@@ -5182,43 +5573,28 @@ namespace TridionDesktopTools.Core
                 }
                 else
                 {
-                    DeleteTridionObject(usingItem, delete, results, String.Empty, true, level + 1);
+                    DeleteTridionObject(usingItem, delete, results, string.Empty, true, level + 1);
                 }
             }
-
-            List<ResultInfo> publicationResults = new List<ResultInfo>();
 
             //delete / inform published items
             List<ItemInfo> pulishedItems = GetItemsByPublication(tcmPublication, true).Where(x => x.IsPublished).ToList();
             foreach (ItemInfo publishedItem in pulishedItems)
             {
-                DeleteTridionObject(publishedItem.TcmId, delete, publicationResults, String.Empty, true, level);
+                DeleteTridionObject(publishedItem.TcmId, delete, results, string.Empty, true, level);
             }
-
-            //unlocalize items
-            List<ItemInfo> childItems = GetContainersByPublication(tcmPublication);
-            foreach (ItemInfo childItem in childItems)
-            {
-                UnlocalizeFolderOrStructureGroup(childItem, delete, publicationResults);
-            }
-
-            results.AddRange(publicationResults.Distinct(new ResultInfoComparer()));
 
             try
             {
-                //delete publication as an object
                 if (delete)
                 {
+                    //delete publication as an object
                     Client.Delete(tcmPublication);
-                }
 
-                if (delete)
-                {
                     results.Add(new ResultInfo
                     {
-                        Message = String.Format("Deleted publication \"{0}\"", publication.Title),
-                        TcmId = tcmPublication,
-                        ItemType = ItemType.Publication,
+                        Message = string.Format("Deleted publication \"{0}\"", publication.Title),
+                        Item = publication.ToItem(),
                         Status = Status.Success
                     });
                 }
@@ -5226,10 +5602,9 @@ namespace TridionDesktopTools.Core
                 {
                     results.Add(new ResultInfo
                     {
-                        Message = String.Format("Delete publication \"{0}\"", publication.Title),
-                        TcmId = tcmPublication,
-                        ItemType = ItemType.Publication,
-                        Status = Status.Info
+                        Message = string.Format("Delete publication \"{0}\"", publication.Title),
+                        Item = publication.ToItem(),
+                        Status = Status.Delete
                     });
                 }
             }
@@ -5237,9 +5612,8 @@ namespace TridionDesktopTools.Core
             {
                 results.Add(new ResultInfo
                 {
-                    Message = String.Format("Error deleting publication \"{0}\"", publication.Title),
-                    TcmId = tcmPublication,
-                    ItemType = ItemType.Publication,
+                    Message = string.Format("Error deleting publication \"{0}\". Error message \"{1}\"", publication.Title, ex.Message),
+                    Item = publication.ToItem(),
                     Status = Status.Error,
                     StackTrace = ex.StackTrace
                 });
@@ -5255,14 +5629,9 @@ namespace TridionDesktopTools.Core
             return Client.GetListPublishInfo(tcmItem).Any();
         }
 
-        private static string GetPublishInfo(string tcmItem)
+        private static List<ItemInfo> GetPublishedItems(ItemInfo item)
         {
-            return string.Join(", ", Client.GetListPublishInfo(tcmItem).Select(p => String.Format("\"{0}\"", Client.Read(p.Repository.IdRef, new ReadOptions()).Title)).ToArray());
-        }
-
-        private static string GetFirstPublishItemTcmId(string tcmItem)
-        {
-            return GetBluePrintItemTcmId(tcmItem, Client.GetListPublishInfo(tcmItem).First().Repository.IdRef);
+            return Client.GetListPublishInfo(item.TcmId).Select(p => new ItemInfo { TcmId = GetBluePrintItemTcmId(item.TcmId, p.Repository.IdRef), Title = item.Title, ItemType = item.ItemType, IsPublished = true, FromPub = p.Repository.Title, Path = string.IsNullOrEmpty(item.Path) ? string.Empty : item.Path.Replace(item.Path.Trim('\\').Split('\\')[0], p.Repository.Title) }).ToList();
         }
 
         #endregion
@@ -5283,42 +5652,16 @@ namespace TridionDesktopTools.Core
             return list2.First().Item.Id;
         }
 
-        public static string GetBluePrintBottomTcmId(string id)
+        public static List<BluePrintNodeData> GetBluePrintItems(string id)
         {
             if (id.StartsWith("tcm:0-"))
-                return id;
+                return null;
 
             var list = Client.GetSystemWideList(new BluePrintFilterData { ForItem = new LinkToRepositoryLocalObjectData { IdRef = id } });
             if (list == null || list.Length == 0)
-                return id;
+                return null;
 
-            var list2 = list.Cast<BluePrintNodeData>().Where(x => x.Item != null).ToList();
-
-            return list2.Last().Item.Id;
-        }
-
-        //todo: improve perfomance of using this
-        private static string GetBluePrintTopLocalizedTcmId(string id)
-        {
-            if (id.StartsWith("tcm:0-"))
-                return id;
-
-            var list = Client.GetSystemWideList(new BluePrintFilterData { ForItem = new LinkToRepositoryLocalObjectData { IdRef = id } });
-            if (list == null || list.Length == 0)
-                return id;
-
-            var item = list.Cast<BluePrintNodeData>().FirstOrDefault(x => x.Item != null && x.Item.Id == id);
-            if (item == null)
-                return id;
-
-            string publicationId = item.Item.BluePrintInfo.OwningRepository.IdRef;
-
-            return GetBluePrintItemTcmId(id, publicationId);
-        }
-
-        public static bool IsLocalized(string id)
-        {
-            return id == GetBluePrintTopLocalizedTcmId(id) && id != GetBluePrintTopTcmId(id);
+            return list.Cast<BluePrintNodeData>().Where(x => x.Item != null).ToList();
         }
 
         public static bool IsAnyLocalized(string id)
@@ -5327,57 +5670,37 @@ namespace TridionDesktopTools.Core
             if (list == null || list.Length == 0)
                 return false;
 
-            return list.Cast<BluePrintNodeData>().Any(x => x.Item != null && IsLocalized(x.Item.Id));
+            var list2 = list.Cast<BluePrintNodeData>().Where(x => x.Item != null && x.Id == x.Item.BluePrintInfo.OwningRepository.IdRef);
+
+            return list2.Count() > 1;
         }
 
-        public static bool IsShared(string id)
-        {
-            return id != GetBluePrintTopTcmId(id) && id != GetBluePrintTopLocalizedTcmId(id);
-        }
-
-        public static void Localize(string id)
-        {
-            if (IsShared(id))
-                Client.Localize(id, new ReadOptions());
-        }
-
-        public static void UnLocalize(string id)
-        {
-            if(IsLocalized(id))
-                Client.UnLocalize(id, new ReadOptions());
-        }
-
-        public static void UnLocalizeAll(string id)
-        {
-            if (!IsAnyLocalized(id))
-                return;
-
-            var list = Client.GetSystemWideList(new BluePrintFilterData { ForItem = new LinkToRepositoryLocalObjectData { IdRef = id } });
-            if (list == null || list.Length == 0)
-                return;
-
-            var list2 = list.Cast<BluePrintNodeData>().Where(x => x.Item != null).ToList();
-
-            foreach (BluePrintNodeData item in list2)
-            {
-                if(IsLocalized(item.Item.Id))
-                    UnLocalize(item.Item.Id);
-            }
-        }
-
-        //better perfomance
-        //todo: refactor code above to use better perfomance version
-
-        private static void Localize(ItemInfo item)
+        public static void Localize(ItemInfo item)
         {
             if (item.IsShared)
                 Client.Localize(item.TcmId, new ReadOptions());
         }
 
-        private static void UnLocalize(ItemInfo item)
+        public static void UnLocalize(ItemInfo item)
         {
             if (item.IsLocalized)
                 Client.UnLocalize(item.TcmId, new ReadOptions());
+        }
+
+        public static void UnLocalizeAll(string id)
+        {
+            var list = Client.GetSystemWideList(new BluePrintFilterData { ForItem = new LinkToRepositoryLocalObjectData { IdRef = id } });
+            if (list == null || list.Length == 0)
+                return;
+
+            var list2 = list.Cast<BluePrintNodeData>().Where(x => x.Item != null && x.Id == x.Item.BluePrintInfo.OwningRepository.IdRef).ToList();
+
+            string topTcmId = list2.First().Item.Id;
+
+            foreach (BluePrintNodeData item in list2)
+            {
+                UnLocalize(item.Item.ToItem(topTcmId));
+            }
         }
 
         private static void UnlocalizeTridionObject(ItemInfo item, bool delete, List<ResultInfo> results)
@@ -5393,8 +5716,7 @@ namespace TridionDesktopTools.Core
                     results.Add(new ResultInfo
                     {
                         Message = String.Format("Unlocalized item \"{0}\"", itemData.GetWebDav().CutPath("/", 90, true)),
-                        TcmId = item.TcmId,
-                        ItemType = item.ItemType,
+                        Item = itemData.ToItem(),
                         Status = Status.Success
                     });
                 }
@@ -5403,8 +5725,6 @@ namespace TridionDesktopTools.Core
                     results.Add(new ResultInfo
                     {
                         Message = String.Format("Error unlocalizing item \"{0}\"", itemData.GetWebDav().CutPath("/", 80, true)),
-                        TcmId = item.TcmId,
-                        ItemType = item.ItemType,
                         Status = Status.Error,
                         StackTrace = ex.StackTrace
                     });
@@ -5415,37 +5735,9 @@ namespace TridionDesktopTools.Core
                 results.Add(new ResultInfo
                 {
                     Message = String.Format("Unlocalize item \"{0}\"", itemData.GetWebDav().CutPath("/", 90, true)),
-                    TcmId = item.TcmId,
-                    ItemType = item.ItemType,
+                    Item = item,
                     Status = Status.Info
                 });
-            }
-        }
-
-        private static void UnlocalizeFolderOrStructureGroup(ItemInfo folder, bool delete, List<ResultInfo> results)
-        {
-            List<ItemInfo> childItems = GetItemsByParentContainer(folder.TcmId);
-
-            //unlocalize inner items
-            foreach (ItemInfo childItem in childItems)
-            {
-                if (childItem.ItemType == ItemType.Folder || childItem.ItemType == ItemType.StructureGroup)
-                {
-                    UnlocalizeFolderOrStructureGroup(childItem, delete, results);
-                }
-                else
-                {
-                    if (childItem.IsLocalized)
-                    {
-                        UnlocalizeTridionObject(childItem, delete, results);
-                    }
-                }
-            }
-
-            //unlocalize folder or SG as an object
-            if (folder.IsLocalized)
-            {
-                UnlocalizeTridionObject(folder, delete, results);
             }
         }
 
@@ -5601,13 +5893,14 @@ namespace TridionDesktopTools.Core
             List<ItemInfo> res = new List<ItemInfo>();
             if (xml != null && xml.HasElements)
             {
-                foreach (XElement element in xml.Nodes())
+                foreach (XElement element in xml.Elements())
                 {
                     ItemInfo item = new ItemInfo();
                     item.TcmId = element.Attribute("ID").Value;
                     item.ItemType = itemType;
                     item.Title = element.Attributes().Any(x => x.Name == "Title") ? element.Attribute("Title").Value : item.TcmId;
-                    
+                    item.Path = element.Attributes().Any(x => x.Name == "Path") ? element.Attribute("Path").Value : string.Empty;
+
                     if (item.ItemType == ItemType.Schema)
                     {
                         if (element.Attributes().Any(x => x.Name == "Icon"))
@@ -5656,10 +5949,10 @@ namespace TridionDesktopTools.Core
                     {
                         item.MimeType = element.Attributes().Any(x => x.Name == "MIMEType") ? element.Attribute("MIMEType").Value : null;
                     }
-                    
+
                     item.FromPub = element.Attributes().Any(x => x.Name == "FromPub") ? element.Attribute("FromPub").Value : null;
                     item.IsPublished = element.Attributes().Any(x => x.Name == "Icon") && element.Attribute("Icon").Value.EndsWith("P1");
-                    
+
                     res.Add(item);
                 }
             }
@@ -5671,12 +5964,13 @@ namespace TridionDesktopTools.Core
             List<ItemInfo> res = new List<ItemInfo>();
             if (xml != null && xml.HasElements)
             {
-                foreach (XElement element in xml.Nodes())
+                foreach (XElement element in xml.Elements())
                 {
                     ItemInfo item = new ItemInfo();
                     item.TcmId = element.Attribute("ID").Value;
                     item.ItemType = element.Attributes().Any(x => x.Name == "Type") ? (ItemType)Int32.Parse(element.Attribute("Type").Value) : GetItemType(item.TcmId);
                     item.Title = element.Attributes().Any(x => x.Name == "Title") ? element.Attribute("Title").Value : item.TcmId;
+                    item.Path = element.Attributes().Any(x => x.Name == "Path") ? element.Attribute("Path").Value : string.Empty;
 
                     if (item.ItemType == ItemType.Schema)
                     {
@@ -5736,12 +6030,78 @@ namespace TridionDesktopTools.Core
             return res;
         }
 
+        public static ItemInfo ToItem(this RepositoryLocalObjectData dataItem, string topTcmId = null)
+        {
+            ItemInfo item = new ItemInfo();
+            item.TcmId = dataItem.Id;
+            item.ItemType = GetItemType(dataItem.Id);
+            item.Title = dataItem.Title;
+
+            string webDav = dataItem.GetWebDav();
+            item.Path = string.IsNullOrEmpty(webDav) ? string.Empty : Path.GetDirectoryName(webDav.Replace('/', '\\'));
+
+            if (item.ItemType == ItemType.Schema)
+            {
+                SchemaData schemaDataItem = (SchemaData)dataItem;
+                if (schemaDataItem.Purpose == SchemaPurpose.Bundle)
+                {
+                    item.SchemaType = SchemaType.Bundle;
+                }
+                else if (schemaDataItem.Purpose == SchemaPurpose.TemplateParameters)
+                {
+                    item.SchemaType = SchemaType.Parameters;
+                }
+                else if (schemaDataItem.Purpose == SchemaPurpose.Metadata)
+                {
+                    item.SchemaType = SchemaType.Metadata;
+                }
+                else if (schemaDataItem.Purpose == SchemaPurpose.Embedded)
+                {
+                    item.SchemaType = SchemaType.Embedded;
+                }
+                else if (schemaDataItem.Purpose == SchemaPurpose.Multimedia)
+                {
+                    item.SchemaType = SchemaType.Multimedia;
+                }
+                else if (schemaDataItem.Purpose == SchemaPurpose.Component)
+                {
+                    item.SchemaType = SchemaType.Component;
+                }
+                else
+                {
+                    item.SchemaType = SchemaType.None;
+                }
+            }
+
+            if (GetPublicationTcmId(dataItem.Id) == dataItem.BluePrintInfo.OwningRepository.IdRef && dataItem.Id == topTcmId)
+                item.FromPub = string.Empty;
+            else if (GetPublicationTcmId(dataItem.Id) == dataItem.BluePrintInfo.OwningRepository.IdRef)
+                item.FromPub = "(Local copy)";
+            else
+                item.FromPub = dataItem.BluePrintInfo.OwningRepository.Title;
+
+            if (dataItem.IsPublishedInContext != null)
+                item.IsPublished = dataItem.IsPublishedInContext.Value;
+
+            return item;
+        }
+
+        public static ItemInfo ToItem(this PublicationData publicationData)
+        {
+            ItemInfo item = new ItemInfo();
+            item.TcmId = publicationData.Id;
+            item.ItemType = ItemType.Publication;
+            item.Title = publicationData.Title;
+
+            return item;
+        }
+
         public static ItemType GetItemType(string tcmItem)
         {
             if (string.IsNullOrEmpty(tcmItem))
                 return ItemType.None;
-            
-            string[] arr = tcmItem.Replace("tcm:", String.Empty).Split('-');
+
+            string[] arr = tcmItem.Replace("tcm:", string.Empty).Split('-');
             if (arr.Length == 2) return ItemType.Component;
 
             return (ItemType)Int32.Parse(arr[2]);
@@ -5950,11 +6310,11 @@ namespace TridionDesktopTools.Core
             {
                 foreach (string ext in mt.FileExtensions)
                 {
-                    if (Path.GetExtension(filePath).ToLower().Replace(".", String.Empty) == ext.ToLower().Replace(".", String.Empty))
+                    if (Path.GetExtension(filePath).ToLower().Replace(".", string.Empty) == ext.ToLower().Replace(".", string.Empty))
                         return mt.Id;
                 }
             }
-            return String.Empty;
+            return string.Empty;
         }
 
         public static List<ItemInfo> FindCheckedOutItems()
@@ -6015,7 +6375,7 @@ namespace TridionDesktopTools.Core
 
         public static string GetFieldTypeName(this ItemFieldDefinitionData field)
         {
-            return field.GetFieldType() == FieldType.None ? String.Empty : field.GetFieldType().ToString();
+            return field.GetFieldType() == FieldType.None ? string.Empty : field.GetFieldType().ToString();
         }
 
         public static bool IsText(this ItemFieldDefinitionData field)
@@ -6163,21 +6523,29 @@ namespace TridionDesktopTools.Core
 
         #region Text helpers
 
+        public static string GetId(this string tcmId)
+        {
+            if (string.IsNullOrEmpty(tcmId) || !tcmId.StartsWith("tcm:") || !tcmId.Contains("-"))
+                return string.Empty;
+
+            return tcmId.Split('-')[1];
+        }
+
         public static string GetPublicationTcmId(string id)
         {
             ItemType itemType = GetItemType(id);
             if (itemType == ItemType.Publication)
                 return id;
             
-            return "tcm:0-" + id.Replace("tcm:", String.Empty).Split('-')[0] + "-1";
+            return "tcm:0-" + id.Replace("tcm:", string.Empty).Split('-')[0] + "-1";
         }
 
         public static string GetBluePrintItemTcmId(string id, string publicationId)
         {
-            if (String.IsNullOrEmpty(id))
-                return id;
+            if (string.IsNullOrEmpty(id) || !id.StartsWith("tcm:") || !id.Contains("-") || string.IsNullOrEmpty(publicationId) || !publicationId.StartsWith("tcm:") || !publicationId.Contains("-"))
+                return string.Empty;
 
-            return "tcm:" + publicationId.Split('-')[1] + "-" + id.Split('-')[1] + (id.Split('-').Length > 2 ? "-" + id.Split('-')[2] : "");
+            return "tcm:" + publicationId.GetId() + "-" + id.GetId() + (id.Split('-').Length > 2 ? "-" + id.Split('-')[2] : string.Empty);
         }
 
         public static string CutPath(this string path, string separator, int maxLength)
@@ -6215,8 +6583,8 @@ namespace TridionDesktopTools.Core
             if (str.Length > maxLength)
             {
                 return str.Substring(0, maxLength - 2) + "..";
-
             }
+
             return str;
         }
 
@@ -6294,7 +6662,7 @@ namespace TridionDesktopTools.Core
         public static string GetFieldNamePath(this FieldInfo field, bool breakComponentLinkPath = false)
         {
             if (field == null)
-                return String.Empty;
+                return string.Empty;
 
             if (breakComponentLinkPath && field.Field.IsComponentLink())
                 return field.IsMeta ? "Metadata" : field.RootElementName;
@@ -6340,7 +6708,7 @@ namespace TridionDesktopTools.Core
                 }
                 else if (replacement.Fragment == "[ID]")
                 {
-                    replacementResults.Add(String.IsNullOrEmpty(replacement.Regex) ? tcmId.Split('-')[1] : Regex.Match(tcmId.Split('-')[1], replacement.Regex).Value);
+                    replacementResults.Add(String.IsNullOrEmpty(replacement.Regex) ? tcmId.GetId() : Regex.Match(tcmId.GetId(), replacement.Regex).Value);
                 }
                 else if (replacement.Field != null && componentValues != null)
                 {
@@ -6366,13 +6734,6 @@ namespace TridionDesktopTools.Core
         public static string GetId(params object[] keys)
         {
             return String.Join("_", keys).Replace("tcm:", "").Replace("http:", "").Replace("https:", "").Replace("/", "").Replace("<", "").Replace(">", "").Replace("[", "").Replace("]", "").Replace("-", "").Replace(" ", "");
-        }
-
-        public static string GetId(this string tcmId)
-        {
-            if (String.IsNullOrEmpty(tcmId))
-                return String.Empty;
-            return tcmId.Split('-')[1];
         }
 
         public static string GetItemCmsUrl(string host, string tcmId, string title = "")
@@ -6413,7 +6774,7 @@ namespace TridionDesktopTools.Core
             using (IsolatedStorageFile isf = IsolatedStorageFile.GetStore(IsolatedStorageScope.User | IsolatedStorageScope.Assembly | IsolatedStorageScope.Domain, typeof(System.Security.Policy.Url), typeof(System.Security.Policy.Url)))
             {
                 if (!isf.FileExists(key + ".txt"))
-                    return String.Empty;
+                    return string.Empty;
 
                 using (IsolatedStorageFileStream isfs = new IsolatedStorageFileStream(key + ".txt", FileMode.Open, isf))
                 {

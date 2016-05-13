@@ -11,6 +11,7 @@ namespace TridionDesktopTools.Core
         private List<ItemInfo> _ChildItems;
         private string _TcmId;
         private string _Title;
+        private string _Path;
         private bool _IsSelected;
         private bool _IsExpanded;
 
@@ -33,6 +34,17 @@ namespace TridionDesktopTools.Core
                 if (value == _Title) return;
                 _Title = value;
                 OnPropertyChanged("Title");
+            }
+        }
+        
+        public string Path
+        {
+            get { return _Path; }
+            set
+            {
+                if (value == _Path) return;
+                _Path = value;
+                OnPropertyChanged("Path");
             }
         }
 

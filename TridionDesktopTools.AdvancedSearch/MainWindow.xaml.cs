@@ -175,7 +175,7 @@ namespace TridionDesktopTools.AdvancedSearch
             //show results
             ResultsWindow dialog = new ResultsWindow();
             dialog.Host = this.txtHost.Text;
-            dialog.ListBoxReport.ItemsSource = this.CheckResults(res.Select(itemInfo => new ResultInfo { TcmId = itemInfo.TcmId, ItemType = itemInfo.ItemType, Status = Status.Info, Message = string.Format("{0} ({1})", itemInfo.Title, itemInfo.TcmId) }).ToList());
+            dialog.ListBoxReport.ItemsSource = this.CheckResults(res.Select(itemInfo => new ResultInfo { Item = itemInfo, Status = Status.Info, Message = string.Format("{0} ({1})", itemInfo.Title, itemInfo.TcmId) }).ToList());
             dialog.ListBoxReport.MouseDoubleClick += lbReport_OnMouseDoubleClick;
             dialog.Show();
         }

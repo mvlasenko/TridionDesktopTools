@@ -130,7 +130,7 @@ namespace TridionDesktopTools.ComponentTransformer.Custom
           
             string resText = resElement.ToString();
             resText = resText.Replace(" xmlns=\"\"", string.Empty);
-            resText = resText.Replace(String.Format(" xmlns=\"{0}\"", sourceNs), String.Empty);
+            resText = resText.Replace(String.Format(" xmlns=\"{0}\"", sourceNs), string.Empty);
 
             return resText;
         }

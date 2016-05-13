@@ -37,6 +37,7 @@ namespace TridionDesktopTools.Core
     {
         Info,
         Success,
+        Delete,
         Warning,
         Error,
         None
